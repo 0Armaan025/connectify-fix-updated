@@ -1,0 +1,12 @@
+mixture of instagram, snapchat, and reddit
+
+forums
+stories
+private chat
+sending stuff in public
+
+
+what will happen is -> the user signs up / logins -> it will be stored in appwrite, ok??
+and their profile image in the bucket or something or whatever.
+
+data fetch from appwrite and it works yay

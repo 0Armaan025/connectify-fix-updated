@@ -1,5 +1,10 @@
+import 'package:appwrite/models.dart';
+import 'package:connectify/common/utils/utils.dart';
+import 'package:connectify/constants/constants.dart';
+import 'package:connectify/features/controllers/authentication/auth_controller.dart';
 import 'package:connectify/features/repositories/authentication/auth_repository.dart';
 import 'package:connectify/pallete/pallete.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hexcolor/hexcolor.dart';
@@ -20,7 +25,6 @@ class _SignUpPageState extends State<SignUpPage> {
 
   @override
   void dispose() {
-    // TODO: implement dispose
     super.dispose();
     _nameController.dispose();
     _emailController.dispose();
@@ -28,8 +32,52 @@ class _SignUpPageState extends State<SignUpPage> {
   }
 
   void signUpWithGoogle(BuildContext context) async {
-    await AuthRepository().registerUserWithGoogle(context);
+    final User? user = await AuthController().signUpWithGoogle(context);
+    globalUser = user;
+    setState(() {});
+    if (mounted) {
+      showSnackBar(context, user?.name ?? 'no name found');
+    }
   }
+
+  void signUpWithEmailAndPassword(BuildContext context) async {
+    debugPrint(_nameController.text);
+    debugPrint(_emailController.text);
+    debugPrint(_passController.text);
+    await AuthController().signUpWithEmailAndPassword(
+        _nameController.text.trim().toString(),
+        _emailController.text.trim().toString(),
+        _passController.text.trim().toString());
+
+    setState(() {});
+  }
+
+  void logInUser(BuildContext context) async {
+    await AuthController().signInWithEmailAndPassword(
+        _emailController.text.trim().toString(),
+        _passController.text.trim().toString());
+
+    setState(() {});
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    // checkUserExistence();
+    if (globalUser != null) {
+      showSnackBar(context, globalUser!.name);
+    }
+  }
+
+  // void checkUserExistence() async {
+  //   final user = await AuthController().getCurrentUser(context);
+  //   if (user != null) {
+  //     showSnackBar(context, 'User exists');
+  //   } else {
+  //     showSnackBar(context, 'user doesn\'t exist');
+  //   }
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -267,21 +315,30 @@ class _SignUpPageState extends State<SignUpPage> {
                     ),
                     // Sign Up/Log In Button
                     Center(
-                      child: Container(
-                        width: double.infinity,
-                        height: size.height * 0.08,
-                        alignment: Alignment.center,
-                        margin: const EdgeInsets.symmetric(horizontal: 25)
-                            .copyWith(top: 20),
-                        decoration: BoxDecoration(
-                          color: HexColor("#45464f"),
-                          borderRadius: BorderRadius.circular(28),
-                        ),
-                        child: Text(
-                          isSignUp ? "Sign Up" : "Log In",
-                          style: GoogleFonts.poppins(
-                            color: Colors.white,
-                            fontSize: 15,
+                      child: InkWell(
+                        onTap: () {
+                          if (isSignUp) {
+                            signUpWithEmailAndPassword(context);
+                          } else {
+                            logInUser(context);
+                          }
+                        },
+                        child: Container(
+                          width: double.infinity,
+                          height: size.height * 0.08,
+                          alignment: Alignment.center,
+                          margin: const EdgeInsets.symmetric(horizontal: 25)
+                              .copyWith(top: 20),
+                          decoration: BoxDecoration(
+                            color: HexColor("#45464f"),
+                            borderRadius: BorderRadius.circular(28),
+                          ),
+                          child: Text(
+                            isSignUp ? "Sign Up" : "Log In",
+                            style: GoogleFonts.poppins(
+                              color: Colors.white,
+                              fontSize: 15,
+                            ),
                           ),
                         ),
                       ),

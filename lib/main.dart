@@ -6,16 +6,16 @@ import 'package:appwrite/models.dart' as models;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  Client client = Client()
-      .setEndpoint("https://cloud.appwrite.io/v1")
-      .setProject("connectify-00d");
-  Account account = Account(client);
+  // Client client = Client()
+  //     .setEndpoint("https://cloud.appwrite.io/v1")
+  //     .setProject("connectify-00d");
+  // Account account = Account(client);
   runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
-9
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(

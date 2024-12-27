@@ -39,7 +39,7 @@
         <action android:name="android.intent.action.VIEW" />
         <category android:name="android.intent.category.DEFAULT" />
         <category android:name="android.intent.category.BROWSABLE" />
-        <data android:scheme="appwrite-callback-[connectify-00d]" />
+        <data android:scheme="appwrite-callback-connectify-00d" />
       </intent-filter>
     </activity>
 

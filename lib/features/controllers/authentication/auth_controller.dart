@@ -7,18 +7,18 @@ class AuthController {
   final AuthRepository _authRepository = AuthRepository();
 
   Future<User?> signInWithEmailAndPassword(
-      String email, String password) async {
+      BuildContext context, String email, String password) async {
     try {
-      await _authRepository.loginUser(email, password);
+      await _authRepository.loginUser(context, email, password);
     } catch (e) {
       rethrow;
     }
   }
 
   Future<void> signUpWithEmailAndPassword(
-      String name, String email, String password) async {
+      BuildContext context, String name, String email, String password) async {
     try {
-      await _authRepository.registerUser(name, email, password);
+      await _authRepository.registerUser(context, name, email, password);
     } catch (e) {
       rethrow;
     }
@@ -26,6 +26,11 @@ class AuthController {
 
   Future<User?> signUpWithGoogle(BuildContext context) async {
     final user = await _authRepository.registerUserWithGoogle(context);
+    return user;
+  }
+
+  Future<User?> getCurrentUser(BuildContext context) async {
+    final user = await _authRepository.getCurrentUser(context);
     return user;
   }
 }

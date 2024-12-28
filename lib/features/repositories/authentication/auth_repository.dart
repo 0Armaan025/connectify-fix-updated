@@ -4,28 +4,32 @@ import 'package:appwrite/models.dart';
 import 'package:connectify/common/utils/utils.dart';
 import 'package:connectify/constants/appwrite-constants.dart';
 import 'package:connectify/constants/constants.dart';
+import 'package:connectify/features/views/profile_set_up/profile_set_up_page.dart';
 import 'package:flutter/material.dart';
 
 class AuthRepository {
-  Client client = Client()
-      .setEndpoint("https://cloud.appwrite.io/v1")
-      .setProject("connectify-00d");
+  Client client =
+      Client().setEndpoint(APPWRITE_URL).setProject(APPWRITE_PROJECT_ID);
 
-  Future<User?> loginUser(String email, String password) async {
+  Future<User?> loginUser(BuildContext context, String email, String password,
+      {bool isRegister = false}) async {
     Account account = Account(client);
     await account
         .createEmailPasswordSession(email: email, password: password)
         .then((value) async {
       final user = await account.get();
       globalUser = user;
+
+      if (isRegister) moveScreen(context, ProfileSetUpPage());
     });
 
     return null;
   }
 
-  Future<void> registerUser(String name, String email, String password) async {
+  Future<void> registerUser(
+      BuildContext context, String name, String email, String password) async {
     Account account = Account(client);
-    print('$name $email $password');
+
     try {
       await account
           .create(
@@ -34,13 +38,14 @@ class AuthRepository {
               password: password.trim(),
               name: name.trim())
           .onError((error, stackTrace) {
-        print('Error creating user: ${error.toString()}');
         throw Exception();
       }).then((_) async {
-        await loginUser(email.trim(), password.trim());
+        await loginUser(context, email.trim(), password.trim(),
+            isRegister: true);
       });
     } catch (e) {
-      // debugPrint('Error creating user: ${e.toString()}');
+      showSnackBar(context,
+          "Some random error happened, you can report it to Armaan, error: ${e.toString()}");
       return;
     }
   }
@@ -53,10 +58,22 @@ class AuthRepository {
         )
         .then((_) {})
         .onError((error, stackTrace) {
-      showSnackBar(context, error.toString() + stackTrace.toString());
+      showSnackBar(context,
+          "Some error ocurred, report it to Armaan kudasai (please) :D, error: ${error}");
     });
     final user = account.get();
     showSnackBar(context, "Success, user is $user");
     return user;
+  }
+
+  Future<User?> getCurrentUser(BuildContext context) async {
+    Account account = Account(client);
+    final user = account.get();
+
+    if (user != null) {
+      return user;
+    } else {
+      showSnackBar(context, "No user exists, we are sorry");
+    }
   }
 }

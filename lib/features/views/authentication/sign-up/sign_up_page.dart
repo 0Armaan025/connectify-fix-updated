@@ -35,16 +35,11 @@ class _SignUpPageState extends State<SignUpPage> {
     final User? user = await AuthController().signUpWithGoogle(context);
     globalUser = user;
     setState(() {});
-    if (mounted) {
-      showSnackBar(context, user?.name ?? 'no name found');
-    }
   }
 
   void signUpWithEmailAndPassword(BuildContext context) async {
-    debugPrint(_nameController.text);
-    debugPrint(_emailController.text);
-    debugPrint(_passController.text);
     await AuthController().signUpWithEmailAndPassword(
+        context,
         _nameController.text.trim().toString(),
         _emailController.text.trim().toString(),
         _passController.text.trim().toString());
@@ -54,6 +49,7 @@ class _SignUpPageState extends State<SignUpPage> {
 
   void logInUser(BuildContext context) async {
     await AuthController().signInWithEmailAndPassword(
+        context,
         _emailController.text.trim().toString(),
         _passController.text.trim().toString());
 
@@ -62,22 +58,16 @@ class _SignUpPageState extends State<SignUpPage> {
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
-    // checkUserExistence();
-    if (globalUser != null) {
-      showSnackBar(context, globalUser!.name);
-    }
+    checkUserExistence();
   }
 
-  // void checkUserExistence() async {
-  //   final user = await AuthController().getCurrentUser(context);
-  //   if (user != null) {
-  //     showSnackBar(context, 'User exists');
-  //   } else {
-  //     showSnackBar(context, 'user doesn\'t exist');
-  //   }
-  // }
+  void checkUserExistence() async {
+    final user = await AuthController().getCurrentUser(context);
+    if (user != null) {
+      showSnackBar(context, user.name);
+    } else {}
+  }
 
   @override
   Widget build(BuildContext context) {

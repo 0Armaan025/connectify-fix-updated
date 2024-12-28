@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:animate_do/animate_do.dart'; // Import animate_do package
 import 'package:connectify/common/buttons/custom_button.dart';
 import 'package:connectify/common/utils/utils.dart';
+import 'package:connectify/features/controllers/database/user_profile_database_controller.dart';
+import 'package:connectify/features/modals/user/user_modal.dart';
 import 'package:connectify/pallete/pallete.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -18,6 +20,39 @@ class ProfileSetUpPage extends StatefulWidget {
 
 class _ProfileSetUpPageState extends State<ProfileSetUpPage> {
   File? _imageFile;
+
+  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _bioController = TextEditingController();
+
+  void setUpProfile(BuildContext context) async {
+    if (_usernameController.text.isNotEmpty &&
+        _bioController.text.isNotEmpty &&
+        _imageFile != null) {
+      UserModal modal = UserModal(
+        username: _usernameController.text.trim(),
+        bio: _bioController.text.trim(),
+        uuid: '',
+        blockedUsers: [""],
+        createdAt: '',
+        email: '',
+        followers: [""],
+        following: [""],
+        isVerified: false,
+        likes: 0,
+        notifications: [""],
+        profileImageUrl: '',
+        realName: '',
+        status: '',
+      );
+
+      UserProfileDatabaseController _userProfileDatabaseRepository =
+          UserProfileDatabaseController();
+      await _userProfileDatabaseRepository.setUpProfile(context, modal);
+    } else {
+      showSnackBar(context,
+          'Please make sure your profile image, username and bio, all are there, and if this issue persists, please contact Armaan!');
+    }
+  }
 
   pickProfileImage(BuildContext context) {
     final size = MediaQuery.of(context).size;
@@ -95,6 +130,13 @@ class _ProfileSetUpPageState extends State<ProfileSetUpPage> {
             ),
           );
         });
+  }
+
+  @override
+  void dispose() {
+    _bioController.dispose();
+    _usernameController.dispose();
+    super.dispose();
   }
 
   @override
@@ -214,6 +256,7 @@ class _ProfileSetUpPageState extends State<ProfileSetUpPage> {
                                 const SizedBox(width: 5),
                                 Expanded(
                                   child: TextField(
+                                    controller: _usernameController,
                                     style: GoogleFonts.poppins(
                                       color: Colors.white,
                                     ),
@@ -260,6 +303,7 @@ class _ProfileSetUpPageState extends State<ProfileSetUpPage> {
                                     padding: const EdgeInsets.symmetric(
                                         horizontal: 10, vertical: 10),
                                     child: TextField(
+                                      controller: _bioController,
                                       maxLines: null, // Allows multiline input
                                       expands:
                                           true, // Makes the TextField fill the available height
@@ -286,7 +330,9 @@ class _ProfileSetUpPageState extends State<ProfileSetUpPage> {
                           height: 50,
                         ),
                         CustomButtonWidget(
-                          onPressed: () {},
+                          onPressed: () {
+                            setUpProfile(context);
+                          },
                         ),
                       ],
                     ),

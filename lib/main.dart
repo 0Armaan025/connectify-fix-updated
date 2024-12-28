@@ -1,5 +1,6 @@
 import 'package:connectify/features/views/authentication/sign-up/sign_up_page.dart';
 import 'package:connectify/features/views/home/home_view.dart';
+import 'package:connectify/features/views/profile_set_up/profile_set_up_page.dart';
 import 'package:flutter/material.dart';
 import 'package:appwrite/appwrite.dart';
 import 'package:appwrite/models.dart' as models;
@@ -23,7 +24,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(primarySwatch: Colors.deepPurple),
       initialRoute: '/',
       routes: {
-        '/': (context) => const SignUpPage(),
+        '/': (context) => const ProfileSetUpPage(),
         '/post': (context) => const PostPage(),
       },
     );

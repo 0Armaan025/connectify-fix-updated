@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:connectify/features/views/notifications/notifications_view.dart';
@@ -205,4 +206,14 @@ buildChatAppBar(BuildContext context, String username, String status,
       ],
     ),
   );
+}
+
+String generateAlphanumericUID() {
+  const characters =
+      'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  final random = Random();
+  final uid =
+      List.generate(10, (_) => characters[random.nextInt(characters.length)])
+          .join();
+  return uid;
 }

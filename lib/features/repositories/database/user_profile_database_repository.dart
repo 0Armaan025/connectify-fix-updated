@@ -1,9 +1,11 @@
 import 'package:appwrite/appwrite.dart';
-import 'package:appwrite/models.dart';
+import 'package:appwrite/models.dart' as models;
 import 'package:connectify/common/utils/utils.dart';
+import 'package:connectify/features/controllers/storage/user_profile_storage_controller.dart';
 import 'package:connectify/features/modals/user/user_modal.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'dart:io';
 
 import '../../../constants/appwrite_constants.dart';
 
@@ -11,10 +13,11 @@ class UserProfileDatabaseRepository {
   Client client =
       Client().setEndpoint(APPWRITE_URL).setProject(APPWRITE_PROJECT_ID);
 
-  Future<void> saveUserData(BuildContext context, UserModal modal) async {
+  Future<void> saveUserData(
+      BuildContext context, UserModal modal, File imageFile) async {
     final databases = Databases(client);
     final account = Account(client);
-    final User user = await account.get();
+    final models.User user = await account.get();
 
     try {
       final now = DateTime.now();
@@ -22,6 +25,13 @@ class UserProfileDatabaseRepository {
           DateFormat('EEE, MMM d, yyyy - hh:mm a').format(now);
 
       final uuid = generateAlphanumericUID();
+
+      // get a previewUrl for the user profile image
+
+      UserProfileStorageController _userProfileStorageController =
+          UserProfileStorageController();
+      final String profileImageUrl = await _userProfileStorageController
+          .saveUserProfileImage(context, imageFile);
 
       final updatedModal = modal.copyWith(
         realName: user.name,
@@ -34,7 +44,7 @@ class UserProfileDatabaseRepository {
         likes: 0,
         notifications: [""],
         uuid: uuid,
-        profileImageUrl: '',
+        profileImageUrl: profileImageUrl,
         status: 'offline',
       );
 

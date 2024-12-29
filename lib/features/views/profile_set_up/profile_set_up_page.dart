@@ -5,6 +5,7 @@ import 'package:connectify/common/buttons/custom_button.dart';
 import 'package:connectify/common/utils/utils.dart';
 import 'package:connectify/features/controllers/database/user_profile_database_controller.dart';
 import 'package:connectify/features/modals/user/user_modal.dart';
+import 'package:connectify/features/repositories/storage/user_profile_storage_repository.dart';
 import 'package:connectify/pallete/pallete.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -47,7 +48,8 @@ class _ProfileSetUpPageState extends State<ProfileSetUpPage> {
 
       UserProfileDatabaseController _userProfileDatabaseRepository =
           UserProfileDatabaseController();
-      await _userProfileDatabaseRepository.setUpProfile(context, modal);
+      await _userProfileDatabaseRepository.setUpProfile(
+          context, modal, _imageFile!);
     } else {
       showSnackBar(context,
           'Please make sure your profile image, username and bio, all are there, and if this issue persists, please contact Armaan!');

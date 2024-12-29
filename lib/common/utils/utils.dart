@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 
+import 'package:connectify/constants/appwrite_constants.dart';
 import 'package:connectify/features/views/notifications/notifications_view.dart';
 import 'package:connectify/features/views/post_upload/post_upload_view.dart';
 import 'package:connectify/features/views/search_users/search_users_view.dart';
@@ -216,4 +217,9 @@ String generateAlphanumericUID() {
       List.generate(10, (_) => characters[random.nextInt(characters.length)])
           .join();
   return uid;
+}
+
+String getFilePreviewURL(String BUCKET_ID, String FILE_ID,
+    {String PROJECT_ID = APPWRITE_PROJECT_ID}) {
+  return "https://cloud.appwrite.io/v1/storage/buckets/${BUCKET_ID}/files/${FILE_ID}/preview?project=${PROJECT_ID}";
 }

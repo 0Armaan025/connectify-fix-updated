@@ -1,3 +1,2 @@
-import 'package:appwrite/models.dart';
-
-User? globalUser;
+export './appwrite_constants.dart';
+export './normal_constants.dart';

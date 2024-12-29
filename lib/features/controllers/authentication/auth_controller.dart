@@ -1,5 +1,5 @@
 import 'package:appwrite/models.dart';
-import 'package:connectify/constants/constants.dart';
+import 'package:connectify/constants/normal_constants.dart';
 import 'package:connectify/features/repositories/authentication/auth_repository.dart';
 import 'package:flutter/material.dart';
 

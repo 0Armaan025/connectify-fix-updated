@@ -1,11 +1,11 @@
-import "dart:io";
+import 'dart:io';
 
 import 'package:appwrite/appwrite.dart';
-import 'package:appwrite/models.dart' as models;
 import 'package:connectify/common/utils/utils.dart';
+import 'package:connectify/constants/appwrite_constants.dart';
 import 'package:flutter/material.dart';
-
-import '../../../constants/constants.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
+import 'package:path_provider/path_provider.dart';
 
 class UserProfileStorageRepository {
   Client client =
@@ -15,30 +15,56 @@ class UserProfileStorageRepository {
     BuildContext context,
     File profileImageFile,
   ) async {
-    Storage storage = Storage(client);
+    try {
+      // Compress the image
+      final compressedImage = await compressImage(profileImageFile);
 
-    String previewUrl = "";
+      Storage storage = Storage(client);
 
-    await storage.createFile(
-      bucketId: APPWRITE_PROFILE_PICS_BUCKET_ID,
-      fileId: ID.unique().toString(),
-      file: InputFile.fromBytes(
-          bytes: profileImageFile.readAsBytesSync(),
-          filename: profileImageFile.path.split('/').last),
-      permissions: [
-        Permission.read('any'),
-        Permission.update('any'),
-      ],
-    ).then((value) async {
-      previewUrl = getFilePreviewURL(value.bucketId, value.$id);
+      // Upload the compressed image
+      final result = await storage.createFile(
+        bucketId: APPWRITE_PROFILE_PICS_BUCKET_ID,
+        fileId: ID.unique(),
+        file: InputFile.fromBytes(
+          bytes: compressedImage.readAsBytesSync(),
+          filename: compressedImage.path.split('/').last,
+        ),
+        permissions: [
+          Permission.read(Role.any()),
+          Permission.update(Role.any()),
+        ],
+      );
 
+      // Generate the preview URL
+      final previewUrl = getFilePreviewURL(result.bucketId, result.$id);
       return previewUrl;
-    }).onError((error, stackTrace) {
-      showSnackBar(context,
-          "Some error occurred, please report it to Armaan :) : $error");
+    } catch (error) {
+      showSnackBar(context, "An error occurred: $error");
       throw Exception(error.toString());
-    });
+    }
+  }
 
-    return previewUrl;
+  Future<File> compressImage(File file) async {
+    final tempDir = await getTemporaryDirectory();
+    final targetPath =
+        '${tempDir.path}/${DateTime.now().millisecondsSinceEpoch}.jpg';
+
+    int sizeInBytes = file.lengthSync();
+    double sizeInKB = sizeInBytes / 1024;
+    double sizeInMB = sizeInKB / 1024;
+    if (sizeInMB > 5) {
+      XFile? result = await FlutterImageCompress.compressAndGetFile(
+        file.absolute.path,
+        targetPath,
+        quality: 85, // Adjust quality between 0 and 100 as needed
+      );
+      if (result != null) {
+        return File(result.path);
+      } else {
+        return file;
+      }
+    } else {
+      return file;
+    }
   }
 }

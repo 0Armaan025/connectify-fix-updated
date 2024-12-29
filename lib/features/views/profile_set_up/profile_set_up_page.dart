@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:animate_do/animate_do.dart'; // Import animate_do package
 import 'package:connectify/common/buttons/custom_button.dart';
-import 'package:connectify/common/utils/utils.dart';
+import 'package:connectify/common/utils/normal_utils.dart';
 import 'package:connectify/features/controllers/database/user_profile_database_controller.dart';
 import 'package:connectify/features/modals/user/user_modal.dart';
 import 'package:connectify/features/repositories/storage/user_profile_storage_repository.dart';

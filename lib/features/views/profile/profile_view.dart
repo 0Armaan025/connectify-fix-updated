@@ -1,5 +1,5 @@
 import 'package:connectify/common/profile_post_tile/profile_post_tile.dart';
-import 'package:connectify/common/utils/utils.dart';
+import 'package:connectify/common/utils/normal_utils.dart';
 import 'package:connectify/features/views/account_settings/account_settings_view.dart';
 import 'package:connectify/features/views/followers/followers_view.dart';
 import 'package:connectify/features/views/following/following_view.dart';

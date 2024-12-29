@@ -1,4 +1,4 @@
-import 'package:connectify/common/utils/utils.dart';
+import 'package:connectify/common/utils/normal_utils.dart';
 import 'package:connectify/features/views/thread/thread_view.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -27,7 +27,6 @@ class _ForumPostState extends State<ForumPost> {
 
   @override
   Widget build(BuildContext context) {
-    
     return GestureDetector(
       onLongPress: () {
         // show delete , report and show profile options in a modal container / dialog anything you feel is fine
@@ -83,7 +82,15 @@ class _ForumPostState extends State<ForumPost> {
         padding: const EdgeInsets.all(12),
         child: Column(
           children: [
-            // User Info
+            Container(
+              width: double.infinity,
+              alignment: Alignment.centerRight,
+              child: Text(
+                "FORUM ID: 3124132432",
+                style: GoogleFonts.poppins(color: Colors.grey.shade700),
+              ),
+            ),
+            const SizedBox(height: 10),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.center,

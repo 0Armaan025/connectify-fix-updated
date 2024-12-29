@@ -1,6 +1,6 @@
 import 'package:appwrite/appwrite.dart';
 import 'package:appwrite/models.dart' as models;
-import 'package:connectify/common/utils/utils.dart';
+import 'package:connectify/common/utils/normal_utils.dart';
 import 'package:connectify/features/controllers/storage/user_profile_storage_controller.dart';
 import 'package:connectify/features/modals/user/user_modal.dart';
 import 'package:flutter/material.dart';

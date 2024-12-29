@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:appwrite/appwrite.dart';
-import 'package:connectify/common/utils/utils.dart';
+import 'package:connectify/common/utils/normal_utils.dart';
 import 'package:connectify/constants/appwrite_constants.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';

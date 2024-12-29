@@ -1,5 +1,5 @@
 import 'package:appwrite/models.dart';
-import 'package:connectify/common/utils/utils.dart';
+import 'package:connectify/common/utils/normal_utils.dart';
 import 'package:connectify/constants/normal_constants.dart';
 import 'package:connectify/features/controllers/authentication/auth_controller.dart';
 import 'package:connectify/features/repositories/authentication/auth_repository.dart';

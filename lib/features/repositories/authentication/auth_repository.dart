@@ -1,7 +1,7 @@
 import 'package:appwrite/appwrite.dart';
 import 'package:appwrite/enums.dart';
 import 'package:appwrite/models.dart';
-import 'package:connectify/common/utils/utils.dart';
+import 'package:connectify/common/utils/normal_utils.dart';
 import 'package:connectify/constants/appwrite_constants.dart';
 import 'package:connectify/constants/normal_constants.dart';
 import 'package:connectify/features/views/profile_set_up/profile_set_up_page.dart';

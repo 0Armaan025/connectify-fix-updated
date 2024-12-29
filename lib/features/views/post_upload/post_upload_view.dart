@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:connectify/common/utils/utils.dart';
+import 'package:connectify/common/utils/normal_utils.dart';
 import 'package:connectify/features/views/add_forum_post/add_forum_post_view.dart';
 import 'package:connectify/features/views/image_post/image_post_view.dart';
 import 'package:connectify/features/views/text_post/text_post_view.dart';
@@ -87,9 +87,8 @@ class PostUploadViewState extends State<PostUploadView> {
               ),
               const SizedBox(height: 16),
               ListTile(
-                  leading:
-                      const Icon(Icons.camera_alt, color: Colors.deepPurple),
-                  title: const Text('Camera'),
+                  leading: const Icon(Icons.photo, color: Colors.deepPurple),
+                  title: const Text('Image'),
                   onTap: () async {
                     moveScreen(context, const ImagePostScreen());
                   }),

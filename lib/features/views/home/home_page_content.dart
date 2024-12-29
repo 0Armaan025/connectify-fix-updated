@@ -10,7 +10,14 @@ class HomePageContent extends StatefulWidget {
 
 class _HomePageContentState extends State<HomePageContent> {
   Future<List<Widget>> _fetchPosts() async {
-    List<Widget> posts = List.generate(5, (index) => const PostWidget());
+    List<Widget> posts = List.generate(
+        5,
+        (index) => const PostWidget(
+              // imageUrl: '',
+              videoUrl:
+                  'https://www.sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4',
+              text: 'Hi there',
+            ));
 
     return posts;
   }

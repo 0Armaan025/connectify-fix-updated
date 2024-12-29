@@ -1,5 +1,5 @@
 import 'package:connectify/common/attatchment_tile/attatchment_tile.dart';
-import 'package:connectify/common/utils/utils.dart';
+import 'package:connectify/common/utils/normal_utils.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -39,6 +39,19 @@ class _ThreadViewState extends State<ThreadView> {
         padding: const EdgeInsets.all(4),
         child: Column(
           children: [
+            Container(
+              width: double.infinity,
+              alignment: Alignment.centerLeft,
+              child: Text(
+                "FORUM ID: 348341324",
+                style: GoogleFonts.poppins(
+                  color: Colors.grey.shade700,
+                ),
+              ),
+            ),
+            const SizedBox(
+              height: 20,
+            ),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.center,

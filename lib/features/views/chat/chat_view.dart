@@ -1,6 +1,6 @@
 import 'package:connectify/common/chat_bubbles/receiver_chat_bubble/receiver_chat_bubble.dart';
 import 'package:connectify/common/chat_bubbles/sender_chat_bubble/sender_chat_bubble.dart';
-import 'package:connectify/common/utils/utils.dart';
+import 'package:connectify/common/utils/normal_utils.dart';
 import 'package:flutter/material.dart';
 
 class ChatView extends StatefulWidget {

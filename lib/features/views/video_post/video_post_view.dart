@@ -1,5 +1,4 @@
 import 'package:connectify/common/utils/normal_utils.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:connectify/common/buttons/custom_button.dart';
@@ -18,6 +17,16 @@ class _VideoPostScreenState extends State<VideoPostScreen> {
   final _descriptionController = TextEditingController();
   late VideoPlayerController? _videoController;
   bool _isMuted = false;
+
+  List<String> _dummyUsers = [
+    'armaan025',
+    'alice123',
+    'johnDoe',
+    'alex007',
+    'anna',
+    'bobbie'
+  ];
+  List<String> _filteredUsers = [];
 
   Future<void> _pickVideo() async {
     final ImagePicker picker = ImagePicker();
@@ -63,10 +72,32 @@ class _VideoPostScreenState extends State<VideoPostScreen> {
     }
   }
 
+  void _onTextChanged() {
+    String text = _descriptionController.text;
+    if (text.contains('@')) {
+      String query = text.split('@').last; // Get the part after '@'
+      setState(() {
+        _filteredUsers = _dummyUsers
+            .where((user) => user.startsWith(query)) // Filter based on query
+            .toList();
+      });
+    } else {
+      setState(() {
+        _filteredUsers.clear(); // Clear suggestions when @ is not found
+      });
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _descriptionController.addListener(_onTextChanged);
+  }
+
   @override
   void dispose() {
+    _descriptionController.removeListener(_onTextChanged);
     _videoController?.dispose();
-    _descriptionController.dispose();
     super.dispose();
   }
 
@@ -136,6 +167,8 @@ class _VideoPostScreenState extends State<VideoPostScreen> {
                   style: TextStyle(color: Colors.grey),
                 ),
               const SizedBox(height: 20),
+
+              // Caption Input with User Mentioning
               TextFormField(
                 maxLines: 3,
                 controller: _descriptionController,
@@ -151,6 +184,38 @@ class _VideoPostScreenState extends State<VideoPostScreen> {
                   ),
                 ),
               ),
+
+              // User Mentioning Dropdown
+              if (_filteredUsers.isNotEmpty)
+                Container(
+                  padding: const EdgeInsets.only(top: 8),
+                  height: 150,
+                  child: ListView.builder(
+                    itemCount: _filteredUsers.length,
+                    itemBuilder: (context, index) {
+                      return ListTile(
+                        title: Text(
+                          '@${_filteredUsers[index]}',
+                          style: TextStyle(
+                              color: Colors.blue), // Blue color for mentions
+                        ),
+                        onTap: () {
+                          setState(() {
+                            _descriptionController.text =
+                                _descriptionController.text.replaceRange(
+                                    _descriptionController.text
+                                            .lastIndexOf('@') +
+                                        1,
+                                    _descriptionController.text.length,
+                                    _filteredUsers[index]);
+                            _filteredUsers
+                                .clear(); // Clear suggestions after selection
+                          });
+                        },
+                      );
+                    },
+                  ),
+                ),
               const SizedBox(height: 20),
               CustomButtonWidget(
                 text: "Post! yay",

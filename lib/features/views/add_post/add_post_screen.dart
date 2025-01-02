@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:connectify/common/buttons/custom_button.dart';
 import 'package:connectify/common/utils/normal_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart';
@@ -34,6 +35,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
     serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
       // Location services are not enabled, handle accordingly
+      showSnackBar(context, 'turn on your location services, pretty pwease');
       return '';
     }
 
@@ -55,7 +57,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
     );
     latitude = position.latitude;
     longitude = position.longitude;
-    setState(() async {});
+    setState(() {});
     String placeName = await getPlaceName(latitude, longitude);
     return placeName;
     // Use the position data
@@ -73,7 +75,8 @@ class _AddPostScreenState extends State<AddPostScreen> {
         return 'No address found';
       }
     } catch (e) {
-      return 'Error: $e';
+      showSnackBar(context, e.toString());
+      return '';
     }
   }
 
@@ -82,20 +85,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
     final size = MediaQuery.of(context).size;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Add Post"),
-        actions: [
-          TextButton(
-            onPressed: () {
-              // Handle Post Submission
-            },
-            child: const Text(
-              "Post",
-              style: TextStyle(color: Colors.blue),
-            ),
-          ),
-        ],
-      ),
+      appBar: buildAppBar(context),
       body: SingleChildScrollView(
         child: SafeArea(
           child: Padding(
@@ -162,21 +152,12 @@ class _AddPostScreenState extends State<AddPostScreen> {
                 const SizedBox(height: 15),
 
                 // Tags Input
-                TextField(
-                  controller: _tagsController,
-                  style: GoogleFonts.poppins(fontSize: 15),
-                  decoration: const InputDecoration(
-                    hintText: 'Add hashtags (e.g., #nature)',
-                    border: InputBorder.none,
-                  ),
-                ),
-                const SizedBox(height: 15),
 
                 // Location
                 GestureDetector(
                   onTap: () async {
                     _location = await _getCurrentLocation(context);
-                    setState(() async {
+                    setState(() {
                       // _location = "Sample Location, City";
                     });
                   },
@@ -194,30 +175,12 @@ class _AddPostScreenState extends State<AddPostScreen> {
                     ],
                   ),
                 ),
-                const SizedBox(height: 15),
-
-                // Privacy Settings
-                Row(
-                  children: [
-                    const Icon(Icons.lock, color: Colors.grey),
-                    const SizedBox(width: 10),
-                    DropdownButton<String>(
-                      value: _selectedPrivacy,
-                      items: <String>['Public', 'Friends Only', 'Private']
-                          .map((String value) {
-                        return DropdownMenuItem<String>(
-                          value: value,
-                          child: Text(value),
-                        );
-                      }).toList(),
-                      onChanged: (value) {
-                        setState(() {
-                          _selectedPrivacy = value!;
-                        });
-                      },
-                    ),
-                  ],
+                const SizedBox(
+                  height: 50,
                 ),
+                CustomButtonWidget(
+                  text: "Post!",
+                )
               ],
             ),
           ),

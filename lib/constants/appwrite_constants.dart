@@ -10,6 +10,8 @@ const String APPWRITE_DATABASE_NAME = "connectify-database";
 //COLLECTIONS
 const String APPWRITE_USERS_COLLECTION_NAME = "users";
 const String APPWRITE_USERS_COLLECTION_ID = "users-00d";
+const String APPWRITE_POSTS_COLLECTION_NAME = "posts";
+const String APPWRITE_POSTS_COLLECTION_ID = "posts-00d";
 
 //BUCKETS
 const String APPWRITE_PROFILE_PICS_BUCKET_NAME = "profilePics";

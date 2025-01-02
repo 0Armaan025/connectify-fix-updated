@@ -27,10 +27,12 @@ class _HomePageContentState extends State<HomePageContent> {
       totalPosts,
       (index) => PostWidget(
         // Replace with real data
-        videoUrl:
-            'https://www.sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4',
+        // videoUrl:
+        //     'https://www.sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4',
+        imageUrl:
+            'https://images.unsplash.com/photo-1721332154161-847851ea188b?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDF8MHxmZWF0dXJlZC1waG90b3MtZmVlZHwxfHx8ZW58MHx8fHx8',
         text: """
-    Exercitation id deserunt tempor ad sit consectetur fugiat. Non laboris qui id voluptate ex cillum reprehenderit sunt. Elit laboris ad laborum tempor dolor adipisicing aliqua reprehenderit nisi id incididunt. Cupidatat quis sunt culpa aliqua duis sit eiusmod dolor ut commodo. Amet do sint ut ad incididunt aute occaecat. Exercitation labore voluptate veniam ex ad qui tempor dolor non ea.
+    this is some cool text
     """,
       ),
     );

@@ -196,8 +196,8 @@ class _VideoPostScreenState extends State<VideoPostScreen> {
                       return ListTile(
                         title: Text(
                           '@${_filteredUsers[index]}',
-                          style: TextStyle(
-                              color: Colors.blue), // Blue color for mentions
+                          style: const TextStyle(
+                              color: Colors.blue), 
                         ),
                         onTap: () {
                           setState(() {

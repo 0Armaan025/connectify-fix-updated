@@ -3,10 +3,13 @@ import 'dart:typed_data';
 
 import 'package:connectify/common/utils/normal_utils.dart';
 import 'package:connectify/features/views/add_forum_post/add_forum_post_view.dart';
+import 'package:connectify/features/views/add_post/add_post_screen.dart';
 import 'package:connectify/features/views/image_post/image_post_view.dart';
 import 'package:connectify/features/views/text_post/text_post_view.dart';
 import 'package:connectify/features/views/video_post/video_post_view.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 
@@ -78,53 +81,29 @@ class PostUploadViewState extends State<PostUploadView> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text(
+              Text(
                 'Choose an Option',
-                style: TextStyle(
+                style: GoogleFonts.poppins(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                 ),
               ),
               const SizedBox(height: 16),
               ListTile(
-                  leading: const Icon(Icons.photo, color: Colors.deepPurple),
-                  title: const Text('Image'),
+                  leading:
+                      Icon(CupertinoIcons.create, color: Colors.deepPurple),
+                  title: Text(
+                    'Post',
+                    style: GoogleFonts.poppins(),
+                  ),
                   onTap: () async {
-                    moveScreen(context, const ImagePostScreen());
+                    moveScreen(context, const AddPostScreen());
                   }),
-              ListTile(
-                leading: const Icon(Icons.photo, color: Colors.green),
-                title: const Text('Video'),
-                onTap: () async {
-                  Navigator.pop(context);
-
-                  // mediaFile = await pickMedia(context);
-                  // if (mediaFile != null) {
-                  //   final String extension =
-                  //       mediaFile!.path.split('.').last.toLowerCase();
-                  //   if (_isValidMediaFile(extension)) {
-                  //     setState(() {});
-                  //   } else {
-                  //     mediaFile = null;
-                  //     showSnackBar(context, 'Invalid file format');
-                  //   }
-                  // }
-                  moveScreen(context, const VideoPostScreen());
-                },
-              ),
               ListTile(
                 leading: const Icon(Icons.forum, color: Colors.blue),
                 title: const Text('Forum'),
                 onTap: () async {
                   moveScreen(context, const AddForumPostView());
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.text_fields_sharp,
-                    color: Colors.lightGreen),
-                title: const Text('Normal text Post'),
-                onTap: () async {
-                  moveScreen(context, const TextPostScreen());
                 },
               ),
             ],
@@ -178,7 +157,11 @@ class PostUploadViewState extends State<PostUploadView> {
                     onPressed: () {
                       showOptionDialog(context);
                     },
-                    icon: const Icon(Icons.upload_file, size: 45),
+                    icon: const Icon(
+                      Icons.upload,
+                      size: 30,
+                      color: Colors.black,
+                    ),
                   ),
                 ),
               ),

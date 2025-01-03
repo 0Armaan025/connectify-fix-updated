@@ -4,26 +4,26 @@ import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-void main() => runApp(MyApp());
+void main() => runApp(VoiceCallView());
 
 // Fill in the app ID obtained from the Agora Console
 const appId = "798f4dfa077544069c03c0a2e75e76e3";
 // Fill in the temporary token generated from Agora Console
-const token = "007eJxTYJCXOdWsMf/4Lo5o14rt961tlly8/G/zZZ+MvydMN4v/+SKowGBuaZFmkpKWaGBubmpiYmBmmWxgnGyQaJRqbppqbpZqPGVNWXpDICNDqbUcKyMDBIL4PAzJiTk58ckZiXl5qTkMDAC6jyNp";
+const token =
+    "007eJxTYJCXOdWsMf/4Lo5o14rt961tlly8/G/zZZ+MvydMN4v/+SKowGBuaZFmkpKWaGBubmpiYmBmmWxgnGyQaJRqbppqbpZqPGVNWXpDICNDqbUcKyMDBIL4PAzJiTk58ckZiXl5qTkMDAC6jyNp";
 // Fill in the channel name you used to generate the token
-const channel =
-    "call_channel";
+const channel = "call_channel";
 
 // Application class
-class MyApp extends StatefulWidget {
-  const MyApp({Key? key}) : super(key: key);
+class VoiceCallView extends StatefulWidget {
+  const VoiceCallView({Key? key}) : super(key: key);
 
   @override
-  _MyAppState createState() => _MyAppState();
+  _VoiceCallViewState createState() => _VoiceCallViewState();
 }
 
 // Application state class
-class _MyAppState extends State<MyApp> {
+class _VoiceCallViewState extends State<VoiceCallView> {
   int? _remoteUid; // The UID of the remote user
   bool _localUserJoined =
       false; // Indicates whether the local user has joined the channel

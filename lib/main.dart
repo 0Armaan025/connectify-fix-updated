@@ -1,4 +1,5 @@
 import 'package:connectify/features/views/home/home_view.dart';
+import 'package:connectify/features/views/voice_call/voice_call_view.dart';
 import 'package:flutter/material.dart';
 
 void main() async {
@@ -16,7 +17,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(primarySwatch: Colors.deepPurple),
       initialRoute: '/',
       routes: {
-        '/': (context) => const HomePage(),
+        '/': (context) => const VoiceCallView(),
         '/post': (context) => const PostPage(),
       },
     );

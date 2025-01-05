@@ -1,8 +1,11 @@
 import 'package:connectify/common/utils/normal_utils.dart';
+import 'package:connectify/features/modals/user/user_modal.dart';
 import 'package:connectify/features/views/profile/profile_view.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:animated_text_kit/animated_text_kit.dart';
+
+import '../../controllers/database/user_profile_database_controller.dart';
 
 class SearchUsersView extends StatefulWidget {
   const SearchUsersView({super.key});
@@ -12,74 +15,47 @@ class SearchUsersView extends StatefulWidget {
 }
 
 class _SearchUsersViewState extends State<SearchUsersView> {
-  final List<User> _allUsers = [
-    User(
-      userName: 'Sam Smith',
-      profilePicUrl:
-          'https://www.pngitem.com/pimgs/m/146-1468479_my-profile-icon-blank-profile-picture-circle-hd.png',
-      bio: 'Travel enthusiast. Love photography.',
-      followersCount: 1200,
-    ),
-    User(
-      userName: 'Alice Brown',
-      profilePicUrl:
-          'https://www.pngitem.com/pimgs/m/146-1468479_my-profile-icon-blank-profile-picture-circle-hd.png',
-      bio: 'Food lover. Chef at heart.',
-      followersCount: 800,
-    ),
-    User(
-      userName: 'Rachel Green',
-      profilePicUrl:
-          'https://www.pngitem.com/pimgs/m/146-1468479_my-profile-icon-blank-profile-picture-circle-hd.png',
-      bio: 'Fashionista. Coffee addict.',
-      followersCount: 2200,
-    ),
-    User(
-      userName: 'John Doe',
-      profilePicUrl:
-          'https://www.pngitem.com/pimgs/m/146-1468479_my-profile-icon-blank-profile-picture-circle-hd.png',
-      bio: 'Tech geek. Always coding.',
-      followersCount: 950,
-    ),
-    User(
-      userName: 'Mark Davis',
-      profilePicUrl:
-          'https://www.pngitem.com/pimgs/m/146-1468479_my-profile-icon-blank-profile-picture-circle-hd.png',
-      bio: 'Adventurer. Mountain climber.',
-      followersCount: 1300,
-    ),
-    User(
-      userName: 'Emily Johnson',
-      profilePicUrl:
-          'https://www.pngitem.com/pimgs/m/146-1468479_my-profile-icon-blank-profile-picture-circle-hd.png',
-      bio: 'Artist. Love to paint.',
-      followersCount: 950,
-    ),
-  ];
-  List<User> _filteredUsers = [];
+  final List<UserModal> _allUsers = [];
+  List<UserModal> _filteredUsers = [];
   final TextEditingController _searchController = TextEditingController();
-  bool _isLoading = false;
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _filteredUsers = _allUsers;
+    _fetchUsers(); // Fetch users when the view initializes.
     _searchController.addListener(_filterUsers);
   }
 
-  void _filterUsers() {
+  /// Fetch all users from the database
+  Future<void> _fetchUsers() async {
     setState(() {
       _isLoading = true;
     });
-    Future.delayed(const Duration(milliseconds: 300)).then((_) {
+
+    try {
+      final users = await UserProfileDatabaseController().getAllUsersData();
       setState(() {
-        _filteredUsers = _allUsers
-            .where((user) => user.userName
-                .toLowerCase()
-                .contains(_searchController.text.toLowerCase()))
-            .toList();
+        _allUsers.clear();
+        _allUsers.addAll(users.map((e) => UserModal.fromMap(e.data)));
+        _filteredUsers = _allUsers; // Initially display all users.
         _isLoading = false;
       });
+    } catch (e) {
+      showSnackBar(context, 'Error fetching users: $e');
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  /// Filter users based on the search query
+  void _filterUsers() {
+    final query = _searchController.text.toLowerCase();
+    setState(() {
+      _filteredUsers = _allUsers
+          .where((user) => user.username.toLowerCase().contains(query))
+          .toList();
     });
   }
 
@@ -134,7 +110,9 @@ class _SearchUsersViewState extends State<SearchUsersView> {
               ),
               const SizedBox(height: 20),
               Expanded(
-                child: _buildUserList(),
+                child: _isLoading
+                    ? Center(child: CircularProgressIndicator())
+                    : _buildUserList(),
               ),
             ],
           ),
@@ -143,11 +121,8 @@ class _SearchUsersViewState extends State<SearchUsersView> {
     );
   }
 
+  /// Build the user list view
   Widget _buildUserList() {
-    if (_isLoading) {
-      return Center(child: CircularProgressIndicator());
-    }
-
     if (_filteredUsers.isEmpty) {
       return Center(
         child: Text(
@@ -168,7 +143,7 @@ class _SearchUsersViewState extends State<SearchUsersView> {
 }
 
 class UserTile extends StatelessWidget {
-  final User user;
+  final UserModal user;
 
   const UserTile({required this.user});
 
@@ -177,11 +152,10 @@ class UserTile extends StatelessWidget {
     return InkWell(
       onTap: () {
         moveScreen(
-            context,
-            ProfileView(
-              haveNavbar: true,
-            ),
-            isPushReplacement: true);
+          context,
+          ProfileView(haveNavbar: true),
+          isPushReplacement: true,
+        );
       },
       child: Container(
         decoration: BoxDecoration(
@@ -197,88 +171,64 @@ class UserTile extends StatelessWidget {
           ],
         ),
         margin: const EdgeInsets.only(bottom: 12),
-        child: InkWell(
-          onTap: () {
-            moveScreen(
-                context,
-                ProfileView(
-                  haveNavbar: true,
-                ),
-                isPushReplacement: true);
-          },
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-            child: Row(
-              children: [
-                CircleAvatar(
-                  radius: 30, // Smaller avatar
-                  backgroundImage: NetworkImage(user.profilePicUrl),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        user.userName,
-                        style: GoogleFonts.montserrat(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        user.bio,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: GoogleFonts.montserrat(
-                          fontSize: 13,
-                          color: Colors.grey.shade600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+          child: Row(
+            children: [
+              CircleAvatar(
+                radius: 30, // Smaller avatar
+                backgroundImage: NetworkImage(user.profileImageUrl),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '${user.followersCount}',
+                      user.username,
                       style: GoogleFonts.montserrat(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.deepPurpleAccent,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Followers',
+                      user.bio,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: GoogleFonts.montserrat(
-                        fontSize: 11,
+                        fontSize: 13,
                         color: Colors.grey.shade600,
                       ),
                     ),
                   ],
                 ),
-              ],
-            ),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    '${user.followers.length - 1}',
+                    style: GoogleFonts.montserrat(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.deepPurpleAccent,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Followers',
+                    style: GoogleFonts.montserrat(
+                      fontSize: 11,
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
       ),
     );
   }
-}
-
-class User {
-  final String userName;
-  final String profilePicUrl;
-  final String bio;
-  final int followersCount;
-
-  User({
-    required this.userName,
-    required this.profilePicUrl,
-    required this.bio,
-    required this.followersCount,
-  });
 }

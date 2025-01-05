@@ -28,4 +28,9 @@ class UserProfileDatabaseController {
     });
     return document;
   }
+
+  Future<List<models.Document>> getAllUsersData() async {
+    final documents = await _userProfileDatabaseRepository.getAllUsers();
+    return documents;
+  }
 }

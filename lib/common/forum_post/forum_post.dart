@@ -145,13 +145,13 @@ class _ForumPostState extends State<ForumPost> {
                   child: Column(
                     children: [
                       CircleAvatar(
-                        backgroundColor: Colors.grey.shade700,
+                        backgroundColor: Colors.transparent,
                         radius: 20,
                         child: GestureDetector(
                           onTap: () {},
                           child: const Icon(
-                            CupertinoIcons.arrow_up_circle,
-                            color: Colors.white,
+                            CupertinoIcons.hand_thumbsup,
+                            color: Colors.black,
                           ),
                         ),
                       ),

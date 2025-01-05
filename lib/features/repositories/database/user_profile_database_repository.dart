@@ -111,4 +111,16 @@ class UserProfileDatabaseRepository {
 
     return document;
   }
+
+  Future<List<models.Document>> getAllUsers() async {
+    final databases = Databases(client);
+
+    final documents = await databases.listDocuments(
+      databaseId: APPWRITE_DATABASE_ID,
+      collectionId: APPWRITE_USERS_COLLECTION_ID,
+    );
+
+    
+    return documents.documents;
+  }
 }

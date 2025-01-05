@@ -120,13 +120,13 @@ class _ThreadViewState extends State<ThreadView> {
                   child: Column(
                     children: [
                       CircleAvatar(
-                        backgroundColor: Colors.grey.shade700,
+                        backgroundColor: Colors.transparent,
                         radius: 20,
                         child: GestureDetector(
                           onTap: () {},
                           child: const Icon(
-                            CupertinoIcons.arrow_up_circle,
-                            color: Colors.white,
+                            CupertinoIcons.hand_thumbsup,
+                            color: Colors.black,
                           ),
                         ),
                       ),
@@ -254,14 +254,13 @@ class _ThreadViewState extends State<ThreadView> {
                     Column(
                       children: [
                         CircleAvatar(
-                          backgroundColor: Colors.grey.shade700,
-                          radius: 14,
+                          backgroundColor: Colors.transparent,
+                          radius: 20,
                           child: GestureDetector(
                             onTap: () {},
                             child: const Icon(
-                              CupertinoIcons.arrow_up_circle,
-                              color: Colors.white,
-                              size: 16,
+                              CupertinoIcons.hand_thumbsup,
+                              color: Colors.black,
                             ),
                           ),
                         ),

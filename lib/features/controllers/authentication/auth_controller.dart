@@ -33,4 +33,6 @@ class AuthController {
     final user = await _authRepository.getCurrentUser(context);
     return user;
   }
+
+
 }

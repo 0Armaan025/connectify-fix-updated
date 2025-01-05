@@ -1,5 +1,5 @@
 import 'package:connectify/features/views/home/home_view.dart';
-import 'package:connectify/features/views/voice_call/voice_call_view.dart';
+
 import 'package:flutter/material.dart';
 
 void main() async {
@@ -7,8 +7,18 @@ void main() async {
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  @override
+  void initState() {
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -17,7 +27,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(primarySwatch: Colors.deepPurple),
       initialRoute: '/',
       routes: {
-        '/': (context) => const VoiceCallView(),
+        '/': (context) => const HomePage(),
         '/post': (context) => const PostPage(),
       },
     );

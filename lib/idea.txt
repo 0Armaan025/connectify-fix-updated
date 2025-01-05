@@ -1,7 +1,7 @@
 mixture of instagram, snapchat, and reddit
 
 forums
-stories
+stories // marking on 5 Jan, at 1:17 AM, we ain't gonna use this <....> thing, it requires a lot more stuff
 private chat
 sending stuff in public
 
@@ -10,3 +10,14 @@ what will happen is -> the user signs up / logins -> it will be stored in appwri
 and their profile image in the bucket or something or whatever.
 
 data fetch from appwrite and it works yay
+
+// Jan 5, 1:18 AM
+we are gonna put some images in profile-pics-00d bucket only, I suck, I don't have money for more than 3 buckets, got it?
+
+we are gonna have well, one bucket for profilePics
+we are gonna have well, one bucket for posts
+we are gonna have well, one bucket for messages
+
+yeah, that should don
+
+for the forums, we are gonna do at profilePics only // Jan 5, 1:19 AM IST

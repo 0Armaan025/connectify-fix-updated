@@ -6,7 +6,6 @@ import 'package:connectify/constants/appwrite_constants.dart';
 import 'package:connectify/features/views/notifications/notifications_view.dart';
 import 'package:connectify/features/views/post_upload/post_upload_view.dart';
 import 'package:connectify/features/views/search_users/search_users_view.dart';
-import 'package:connectify/features/views/voice_call/voice_call_view.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -149,7 +148,7 @@ buildChatAppBar(BuildContext context, String username, String status,
         padding: const EdgeInsets.only(right: 3),
         child: IconButton(
           onPressed: () {
-            moveScreen(context, VoiceCallView());
+            // moveScreen(context, CallPage());
           },
           icon: const Icon(CupertinoIcons.phone),
         ),

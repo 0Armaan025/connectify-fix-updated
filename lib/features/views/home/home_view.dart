@@ -2,13 +2,18 @@ import 'dart:async';
 
 import 'package:connectify/common/navbar/custom_navbar.dart';
 import 'package:connectify/common/utils/normal_utils.dart';
+import 'package:connectify/features/controllers/authentication/auth_controller.dart';
+import 'package:connectify/features/controllers/database/user_profile_database_controller.dart';
 import 'package:connectify/features/views/chats/chats_view.dart';
 import 'package:connectify/features/views/home/home_page_content.dart';
 import 'package:connectify/features/views/profile/profile_view.dart';
+import 'package:connectify/features/views/profile_set_up/profile_set_up_page.dart';
 import 'package:connectify/features/views/threads/threads_view.dart';
 import 'package:connectify/pallete/pallete.dart';
 import 'package:flutter/material.dart';
 import 'package:uni_links/uni_links.dart';
+
+import '../user_blocked/user_blocked_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -27,6 +32,19 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     _handleIncomingLinks();
+    getCurrentUser(context);
+  }
+
+  getCurrentUser(BuildContext context) async {
+    await getTheUser();
+  }
+
+  Future<void> getTheUser() async {
+    final user = await AuthController().getCurrentUser(context);
+
+    UserProfileDatabaseController controller = UserProfileDatabaseController();
+    final document =
+        await controller.getUserData(context, user!.$id.toString());
   }
 
   Future<void> _handleIncomingLinks() async {

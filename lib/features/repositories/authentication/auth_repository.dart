@@ -5,6 +5,7 @@ import 'package:connectify/common/utils/normal_utils.dart';
 import 'package:connectify/constants/appwrite_constants.dart';
 import 'package:connectify/constants/normal_constants.dart';
 import 'package:connectify/features/views/profile_set_up/profile_set_up_page.dart';
+import 'package:connectify/features/views/user_blocked/user_blocked_page.dart';
 import 'package:flutter/material.dart';
 
 class AuthRepository {
@@ -61,14 +62,27 @@ class AuthRepository {
       showSnackBar(context,
           "Some error ocurred, report it to Armaan kudasai (please) :D, error: ${error}");
     });
-    final user = account.get();
+    final user = account.get().then((value) {
+      moveScreen(context, ProfileSetUpPage());
+    });
 
     return user;
   }
 
   Future<User?> getCurrentUser(BuildContext context) async {
     Account account = Account(client);
-    final user = account.get();
+    final user = account.get().catchError(
+      (error) {
+        if (error is AppwriteException) {
+          if (error.code == 401 && error.message!.contains('blocked')) {
+            moveScreen(context, UserBlockedPage());
+          } else {
+            print(
+                'An error occurred: (contact armaan pwease) ${error.message}');
+          }
+        }
+      },
+    );
 
     if (user != null) {
       return user;

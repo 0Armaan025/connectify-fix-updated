@@ -1,7 +1,10 @@
 import 'package:connectify/common/buttons/custom_button.dart';
 import 'package:connectify/common/utils/normal_utils.dart';
+import 'package:connectify/features/controllers/database/user_forum_database_controller.dart';
+import 'package:connectify/features/modals/forum/forum_modal.dart';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 
@@ -14,6 +17,9 @@ class AddForumPostView extends StatefulWidget {
 
 class _AddForumPostViewState extends State<AddForumPostView> {
   File? _selectedImage;
+  String selectedOption = 'Public';
+
+  final TextEditingController _descriptionController = TextEditingController();
 
   Future<void> _pickImage({bool isEdit = false}) async {
     final ImagePicker picker = ImagePicker();
@@ -33,6 +39,61 @@ class _AddForumPostViewState extends State<AddForumPostView> {
         );
       }
     }
+  }
+
+  Future<void> createForumPost(BuildContext context) async {
+    UserForumDatabaseController controller = UserForumDatabaseController();
+
+    if (_descriptionController.text.isEmpty) {
+      showSnackBar(context, "Please add a description/question!");
+    } else {
+      bool isPublic = selectedOption == 'Public' ? true : false;
+
+      bool isImage = false;
+      bool isPdf = false;
+
+      if (_selectedImage != null) {
+        String extension = _selectedImage!.path.split('.').last;
+
+        if (extension == 'jpg' || extension == 'jpeg' || extension == 'png') {
+          isPdf = false;
+          isImage = true;
+        } else if (extension == 'pdf') {
+          isPdf = true;
+          isImage = false;
+        } else if (extension == 'mov' || extension == 'mp4') {
+          isImage = false;
+          isPdf = false;
+        }
+      }
+
+      ForumModal modal = ForumModal(
+          forumID: '',
+          uuid: '',
+          description: _descriptionController.text,
+          upvotes: [""],
+          mediaUrl: "",
+          forumComments: [""],
+          isPublic: isPublic,
+          createdAt: "");
+
+      // if(_selectedImage!=null) {
+      try {
+        controller.createForumPost(
+            context, modal, _selectedImage, isImage, isPdf);
+        print('Forum post created successfully');
+      } catch (e) {
+        print('Error creating forum post: $e');
+        showSnackBar(context, 'Error: $e');
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    // TODO: implement dispose
+    super.dispose();
+    _descriptionController.dispose();
   }
 
   @override
@@ -105,11 +166,24 @@ class _AddForumPostViewState extends State<AddForumPostView> {
                   ),
                 ),
               ),
-              const SizedBox(height: 20),
-              // Textarea for paragraph
+              const SizedBox(height: 10),
+              Container(
+                margin: const EdgeInsets.only(left: 12),
+                width: double.infinity,
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  "Media is optional, but description/question is not :)\n(-Armaan)",
+                  style: GoogleFonts.poppins(
+                    color: Colors.grey.shade500,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: TextFormField(
+                  controller: _descriptionController,
                   maxLines: 5, // Makes it textarea-like
                   decoration: InputDecoration(
                     hintText: 'Add description',
@@ -138,8 +212,8 @@ class _AddForumPostViewState extends State<AddForumPostView> {
                     fillColor: Colors.grey[200],
                   ),
                   value: 'Public', // Default value
-                  items:
-                      ['Public', 'Private(only search)'].map((String option) {
+                  items: ['Public', 'Private(only search by forum id)']
+                      .map((String option) {
                     return DropdownMenuItem<String>(
                       value: option,
                       child: Text(option),
@@ -148,6 +222,9 @@ class _AddForumPostViewState extends State<AddForumPostView> {
                   onChanged: (String? newValue) {
                     // Handle the value change
                     print('Selected: $newValue');
+                    setState(() {
+                      selectedOption = newValue!;
+                    });
                   },
                 ),
               ),
@@ -156,6 +233,9 @@ class _AddForumPostViewState extends State<AddForumPostView> {
               ),
               CustomButtonWidget(
                 text: "Post...",
+                onPressed: () {
+                  createForumPost(context);
+                },
               ),
               const SizedBox(
                 height: 30,

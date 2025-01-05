@@ -3,6 +3,7 @@ import 'package:appwrite/models.dart' as models;
 import 'package:connectify/common/utils/normal_utils.dart';
 import 'package:connectify/features/controllers/storage/user_profile_storage_controller.dart';
 import 'package:connectify/features/modals/user/user_modal.dart';
+import 'package:connectify/features/views/home/home_view.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'dart:io';
@@ -24,8 +25,6 @@ class UserProfileDatabaseRepository {
       final formattedDate =
           DateFormat('EEE, MMM d, yyyy - hh:mm a').format(now);
 
-      final uuid = generateAlphanumericUID();
-
       // get a previewUrl for the user profile image
 
       UserProfileStorageController _userProfileStorageController =
@@ -43,7 +42,7 @@ class UserProfileDatabaseRepository {
         isVerified: false,
         likes: 0,
         notifications: [""],
-        uuid: uuid,
+        uuid: user.$id.toString(),
         profileImageUrl: profileImageUrl,
         status: 'offline',
       );
@@ -56,11 +55,12 @@ class UserProfileDatabaseRepository {
             .createDocument(
           databaseId: APPWRITE_DATABASE_ID,
           collectionId: APPWRITE_USERS_COLLECTION_ID,
-          documentId: ID.unique().toString(),
+          documentId: user.$id.toString(),
           data: updatedModal.toMap(),
         )
             .then((value) {
-          showSnackBar(context, 'Sir, done, sir!');
+          showSnackBar(context, 'User details updated successfully!!');
+          moveScreen(context, HomePage(), isPushReplacement: true);
         });
       } else {
         showSnackBar(context, 'Username taken, sorry!');
@@ -98,5 +98,17 @@ class UserProfileDatabaseRepository {
     }
 
     return _usernameTaken;
+  }
+
+  Future<models.Document> getUserData(String uuid) {
+    final databases = Databases(client);
+
+    final document = databases.getDocument(
+      databaseId: APPWRITE_DATABASE_ID,
+      collectionId: APPWRITE_USERS_COLLECTION_ID,
+      documentId: uuid,
+    );
+
+    return document;
   }
 }

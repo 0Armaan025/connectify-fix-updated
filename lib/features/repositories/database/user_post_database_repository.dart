@@ -70,4 +70,21 @@ class UserPostDatabaseRepository {
           "please re-register or something, error sorry contact aRmaan");
     }
   }
+
+  Future<List<PostModal>> getAllPosts(BuildContext context) async {
+    final databases = Databases(client);
+
+    final posts = await databases.listDocuments(
+      databaseId: APPWRITE_DATABASE_ID,
+      collectionId: APPWRITE_POSTS_COLLECTION_ID,
+    );
+
+    List<PostModal> allPosts = [];
+
+    for (models.Document post in posts.documents) {
+      allPosts.add(PostModal.fromMap(post.data));
+    }
+
+    return allPosts;
+  }
 }

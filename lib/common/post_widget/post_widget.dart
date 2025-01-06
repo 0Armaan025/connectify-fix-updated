@@ -8,15 +8,25 @@ import 'package:share_plus/share_plus.dart';
 import 'package:video_player/video_player.dart';
 
 class PostWidget extends StatefulWidget {
+  final String username;
   final String? imageUrl;
   final String? videoUrl;
   final String? text;
+  final String profileImageUrl;
+  final String createdAt;
+  final int likes;
+  final List<String> comments;
 
   const PostWidget({
     super.key,
     this.imageUrl,
     this.videoUrl,
     this.text,
+    required this.username,
+    required this.profileImageUrl,
+    required this.likes,
+    required this.createdAt,
+    required this.comments,
   });
 
   @override
@@ -61,7 +71,6 @@ class _PostWidgetState extends State<PostWidget> {
 
       return Stack(
         children: [
-          // Media (Image or Video)
           Container(
             height: mediaHeight,
             width: double.infinity,
@@ -105,10 +114,10 @@ class _PostWidgetState extends State<PostWidget> {
             right: 10,
             child: Row(
               children: [
-                const CircleAvatar(
+                CircleAvatar(
                   radius: 25,
                   backgroundImage: NetworkImage(
-                    'https://cdn-icons-png.flaticon.com/128/3177/3177440.png',
+                    widget.profileImageUrl,
                   ),
                 ),
                 const SizedBox(width: 10),
@@ -116,7 +125,7 @@ class _PostWidgetState extends State<PostWidget> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      "Armaan",
+                      widget.username,
                       style: GoogleFonts.poppins(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,

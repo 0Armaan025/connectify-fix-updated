@@ -1,5 +1,9 @@
 import 'package:connectify/common/post_widget/post_widget.dart';
+import 'package:connectify/features/controllers/database/user_post_database_controller.dart';
+import 'package:connectify/features/controllers/database/user_profile_database_controller.dart';
 import 'package:flutter/material.dart';
+
+import '../../modals/post/post_modal.dart';
 
 class HomePageContent extends StatefulWidget {
   const HomePageContent({super.key});
@@ -9,50 +13,84 @@ class HomePageContent extends StatefulWidget {
 }
 
 class _HomePageContentState extends State<HomePageContent> {
-  // Total number of posts
-  final int totalPosts = 100;
-
-  // Current count of posts to show
-  int postsToShow = 8;
-
-  // List of posts (You can replace this with real data fetching)
-  late List<Widget> posts;
-
-  late ScrollController _scrollController;
+  final List<PostModal> _posts = [];
+  final ScrollController _scrollController = ScrollController();
+  bool _isLoading = true;
+  bool _isFetchingMore = false;
+  int _page = 1; // Pagination page
+  final int _limit = 8; // Posts per page
 
   @override
   void initState() {
     super.initState();
-    posts = List.generate(
-      totalPosts,
-      (index) => PostWidget(
-        // Replace with real data
-        // videoUrl:
-        //     'https://www.sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4',
-        imageUrl:
-            'https://images.unsplash.com/photo-1721332154161-847851ea188b?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDF8MHxmZWF0dXJlZC1waG90b3MtZmVlZHwxfHx8ZW58MHx8fHx8',
-        text: """
-    this is some cool text
-    """,
-      ),
-    );
+    _fetchPosts();
 
-    _scrollController = ScrollController()
-      ..addListener(() {
-        if (_scrollController.position.pixels ==
-            _scrollController.position.maxScrollExtent) {
-          // If the user has reached the end of the list, load more posts
-          _loadMorePosts();
-        }
-      });
+    _scrollController.addListener(() {
+      if (_scrollController.position.pixels ==
+              _scrollController.position.maxScrollExtent &&
+          !_isFetchingMore) {
+        _loadMorePosts();
+      }
+    });
   }
 
-  // Load more posts as user scrolls
-  void _loadMorePosts() {
-    if (postsToShow < totalPosts) {
+  Future<void> _fetchPosts() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final posts = await UserPostDatabaseController().getAllPosts(
+        context,
+      );
+
       setState(() {
-        postsToShow += 8; // Load 8 more posts
+        _posts.addAll(posts as List<PostModal>); // Append new posts to the list
+        _isLoading = false;
       });
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      print('Error fetching posts: $e');
+    }
+  }
+
+  Future<void> _loadMorePosts() async {
+    setState(() {
+      _isFetchingMore = true;
+    });
+
+    _page++; // Increment the page for pagination
+    await _fetchPosts();
+
+    setState(() {
+      _isFetchingMore = false;
+    });
+  }
+
+  Future<Map<String, dynamic>> getUserDataAndCheckMediaType(
+      String uuid, String mediaUrl) async {
+    try {
+      final user =
+          await UserProfileDatabaseController().getUserData(context, uuid);
+
+      bool isImage = mediaUrl.toLowerCase().endsWith('.jpg') ||
+          mediaUrl.toLowerCase().endsWith('.jpeg') ||
+          mediaUrl.toLowerCase().endsWith('.png');
+
+      return {
+        'username': user.data['username'] ?? 'Unknown',
+        'profileImageUrl': user.data['profileImageUrl'] ?? '',
+        'isImage': isImage,
+      };
+    } catch (e) {
+      print('Error fetching user data: $e');
+      return {
+        'username': 'Unknown',
+        'profileImageUrl': '',
+        'isImage': false,
+      };
     }
   }
 
@@ -65,33 +103,58 @@ class _HomePageContentState extends State<HomePageContent> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SingleChildScrollView(
-        controller: _scrollController,
-        child: SafeArea(
-          child: Column(
-            children: [
-              ListView.builder(
-                shrinkWrap:
-                    true, // To make ListView fit inside SingleChildScrollView
-                physics:
-                    NeverScrollableScrollPhysics(), // Disable internal scrolling
-                itemCount: postsToShow, // Display the number of posts to show
-                itemBuilder: (context, index) {
-                  return posts[index]; // Display each post
-                },
-              ),
-              if (postsToShow <
-                  totalPosts) // Show loading indicator if more posts are being loaded
-                const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 20),
-                  child: Center(
-                    child: CircularProgressIndicator(),
-                  ),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : SafeArea(
+              child: SingleChildScrollView(
+                controller: _scrollController,
+                child: Column(
+                  children: [
+                    ListView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: _posts.length,
+                      itemBuilder: (context, index) {
+                        final post = _posts[index];
+                        return FutureBuilder<Map<String, dynamic>>(
+                          future: getUserDataAndCheckMediaType(
+                              post.uuid, post.mediaUrl),
+                          builder: (context, snapshot) {
+                            if (snapshot.connectionState ==
+                                ConnectionState.waiting) {
+                              return const Center(
+                                  child: CircularProgressIndicator());
+                            } else if (snapshot.hasError) {
+                              return const Center(
+                                  child: Text('Error loading post'));
+                            } else if (snapshot.hasData) {
+                              final userData = snapshot.data!;
+                              return PostWidget(
+                                text: post.caption,
+                                comments: [""],
+                                createdAt: post.createdAt,
+                                likes: post.likes.length - 1,
+                                profileImageUrl: userData['profileImageUrl'],
+                                username: userData['username'],
+                              );
+                            } else {
+                              return const SizedBox.shrink();
+                            }
+                          },
+                        );
+                      },
+                    ),
+                    if (_isFetchingMore)
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 20),
+                        child: Center(
+                          child: CircularProgressIndicator(),
+                        ),
+                      ),
+                  ],
                 ),
-            ],
-          ),
-        ),
-      ),
+              ),
+            ),
     );
   }
 }

@@ -62,9 +62,9 @@ class PostModal {
     return PostModal(
       postID: map['postID'] as String,
       uuid: map['uuid'] as String,
-      comments: List<String>.from((map['comments'] as List<String>)),
+      comments: List<String>.from((map['comments'] ?? [])),
       location: map['location'] as String,
-      likes: List<String>.from((map['likes'] as List<String>)),
+      likes: List<String>.from((map['likes'] ?? '')),
       caption: map['caption'] as String,
       mediaUrl: map['mediaUrl'] as String,
       createdAt: map['createdAt'] as String,

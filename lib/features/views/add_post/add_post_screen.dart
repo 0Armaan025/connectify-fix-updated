@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:connectify/common/buttons/custom_button.dart';
 import 'package:connectify/common/utils/normal_utils.dart';
 import 'package:connectify/features/controllers/authentication/auth_controller.dart';
-import 'package:connectify/features/controllers/database/user_post_controller.dart';
+import 'package:connectify/features/controllers/database/user_post_database_controller.dart';
 import 'package:connectify/features/modals/post/post_modal.dart';
 import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart';

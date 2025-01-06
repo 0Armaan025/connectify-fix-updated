@@ -12,4 +12,9 @@ class UserPostDatabaseController {
       BuildContext context, PostModal modal, File? file, bool isImage) async {
     await _userPostRepository.createPost(context, modal, file, isImage);
   }
+
+  Future<List<PostModal>> getAllPosts(BuildContext context) async {
+    final posts = await _userPostRepository.getAllPosts(context);
+    return posts;
+  }
 }

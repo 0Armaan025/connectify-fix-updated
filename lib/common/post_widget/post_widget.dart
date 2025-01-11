@@ -1,4 +1,5 @@
 import 'package:appwrite/appwrite.dart';
+import 'package:connectify/common/enlarged_image/enlarged_image_view.dart';
 import 'package:connectify/common/utils/normal_utils.dart';
 import 'package:connectify/common/utils/post_widget_utils.dart';
 import 'package:flutter/cupertino.dart';
@@ -9,6 +10,7 @@ import 'package:like_button/like_button.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:video_player/video_player.dart';
+import 'package:visibility_detector/visibility_detector.dart';
 
 import '../../constants/appwrite_constants.dart';
 import '../../features/apis/file_downloader/file_downloader.dart';
@@ -43,6 +45,9 @@ class PostWidget extends StatefulWidget {
 
 class _PostWidgetState extends State<PostWidget> {
   bool _isFollowed = false;
+  bool _isUserPaused = false;
+  bool _isVideoVisible = false;
+
   VideoPlayerController? _videoController;
   bool isVideo = false;
   bool isLoadingMedia = true;
@@ -51,6 +56,8 @@ class _PostWidgetState extends State<PostWidget> {
 
   String BUCKET_ID = "";
   String FILE_ID = "";
+  bool _isDelaying = false; // New flag to track delay status
+
   late FileDownloader _fileDownloader;
 
   Client client =
@@ -152,270 +159,314 @@ class _PostWidgetState extends State<PostWidget> {
       return const SizedBox(); // No media content
     }
 
-    double mediaHeight = widget.imageUrl != null ? 550.0 : 400.0;
+    double mediaHeight = widget.imageUrl != null ? 550.0 : 500.0;
 
-    return Stack(
-      children: [
-        Container(
-          height: mediaHeight,
-          width: double.infinity,
-          child: isVideo
-              ? _videoController != null &&
-                      _videoController!.value.isInitialized
-                  ? GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          _videoController!.pause();
-                          _isPlayIconVisible = true;
-                        });
-                        Future.delayed(const Duration(seconds: 3), () {
-                          setState(() {
-                            _videoController!.play();
-                            _isPlayIconVisible = false;
-                          });
-                        });
-                      },
-                      child: AspectRatio(
-                        aspectRatio: _videoController!.value.aspectRatio * 4,
-                        child: Stack(
-                          children: [
-                            VideoPlayer(
-                              _videoController!,
-                            ),
+    return VisibilityDetector(
+      key: Key('video-${widget.mediaUrl}'),
+      onVisibilityChanged: (visibilityInfo) {
+        final visiblePercentage = visibilityInfo.visibleFraction * 100;
+        setState(() {
+          _isVideoVisible =
+              visiblePercentage > 50; // Mark video as visible if >50%
+          if (_isVideoVisible) {
+            _videoController?.play();
+          } else {
+            _videoController?.pause();
+          }
+        });
+      },
+      child: Stack(
+        children: [
+          Container(
+            height: mediaHeight,
+            width: double.infinity,
+            child: isVideo
+                ? _videoController != null &&
+                        _videoController!.value.isInitialized
+                    ? GestureDetector(
+                        onTap: () {
+                          if (_videoController!.value.isPlaying) {
+                            setState(() {
+                              _videoController!.pause();
+                              _isUserPaused = true;
+                              _isPlayIconVisible = true;
+                              _isDelaying =
+                                  false; // Cancel any pending delayed play
+                            });
+                          } else {
+                            setState(() {
+                              _videoController!.play();
+                              _isUserPaused = false;
+                              _isPlayIconVisible = false;
 
-                            // Play/Pause Button
-                            if (_isPlayIconVisible)
-                              Center(
-                                child: GestureDetector(
-                                  onTap: () {
-                                    setState(() {
-                                      if (_videoController!.value.isPlaying) {
-                                        _videoController!.pause();
-                                      } else {
-                                        _videoController!.play();
-                                      }
-                                    });
-                                  },
-                                  child: Icon(
-                                    _videoController!.value.isPlaying
-                                        ? Icons.pause_circle_filled
-                                        : Icons.play_circle_fill,
-                                    size: 50,
-                                    color: Colors.white.withOpacity(0.7),
-                                  ),
-                                ),
+                              // Handle delayed resume only if user didn't pause
+                              _isDelaying =
+                                  true; // Set the flag to allow delayed play
+                            });
+
+                            Future.delayed(const Duration(seconds: 3), () {
+                              if (!_isUserPaused && _isDelaying) {
+                                setState(() {
+                                  _videoController!.play();
+                                  _isPlayIconVisible = false;
+                                });
+                                _isDelaying = false; // Reset delay flag
+                              }
+                            });
+                          }
+                        },
+                        child: AspectRatio(
+                          aspectRatio: _videoController!.value.aspectRatio * 4,
+                          child: Stack(
+                            children: [
+                              VideoPlayer(
+                                _videoController!,
                               ),
 
-                            // Mute/Unmute Button
-                            Positioned(
-                              top: 50,
-                              right: 10,
-                              child: IconButton(
-                                icon: Icon(
-                                  _videoController!.value.volume > 0
-                                      ? Icons.volume_up
-                                      : Icons.volume_off,
-                                  color: Colors.white.withOpacity(0.7),
-                                ),
-                                onPressed: () {
-                                  setState(() {
-                                    _videoController!.setVolume(
-                                        _videoController!.value.volume > 0
-                                            ? 0
-                                            : 1);
-                                  });
-                                },
-                              ),
-                            ),
-
-                            // Time Indicator and Progress Bar
-                            Positioned(
-                              bottom: 10,
-                              left: 10,
-                              right: 10,
-                              child: Column(
-                                children: [
-                                  Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Text(
-                                        formatDuration(
-                                            _videoController!.value.position),
-                                        style: TextStyle(color: Colors.white),
-                                      ),
-                                      Text(
-                                        formatDuration(
-                                            _videoController!.value.duration),
-                                        style: TextStyle(color: Colors.white),
-                                      ),
-                                    ],
-                                  ),
-                                  VideoProgressIndicator(
-                                    _videoController!,
-                                    allowScrubbing: true,
-                                    colors: VideoProgressColors(
-                                      playedColor: Colors.blue,
-                                      bufferedColor: Colors.grey.shade400,
-                                      backgroundColor: Colors.grey.shade300,
+                              // Play/Pause Button
+                              if (_isPlayIconVisible)
+                                Center(
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      setState(() {
+                                        if (_videoController!.value.isPlaying) {
+                                          _videoController!.pause();
+                                          _isUserPaused =
+                                              true; // User manually paused the video
+                                        } else {
+                                          _videoController!.play();
+                                          _isUserPaused =
+                                              false; // User manually resumed the video
+                                        }
+                                      });
+                                    },
+                                    child: Icon(
+                                      _videoController!.value.isPlaying
+                                          ? Icons.pause_circle_filled
+                                          : Icons.play_circle_fill,
+                                      size: 50,
+                                      color: Colors.white.withOpacity(0.7),
                                     ),
                                   ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    )
-                  : const Center(child: CircularProgressIndicator())
-              : Container(
-                  height: MediaQuery.of(context).size.height * 0.8,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(8),
-                    image: DecorationImage(
-                      image: NetworkImage(widget.mediaUrl!),
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                ),
-        ),
+                                ),
 
-        // User Info Overlay
-        Positioned(
-          top: 10,
-          left: 10,
-          right: 10,
-          child: Row(
-            children: [
-              CircleAvatar(
-                radius: 25,
-                backgroundImage: NetworkImage(widget.profileImageUrl),
-              ),
-              const SizedBox(width: 10),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    widget.username,
-                    style: GoogleFonts.poppins(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                  GestureDetector(
+                              // Mute/Unmute Button
+                              Positioned(
+                                top: 50,
+                                right: 10,
+                                child: IconButton(
+                                  icon: Icon(
+                                    _videoController!.value.volume > 0
+                                        ? Icons.volume_up
+                                        : Icons.volume_off,
+                                    color: Colors.white.withOpacity(0.7),
+                                  ),
+                                  onPressed: () {
+                                    setState(() {
+                                      _videoController!.setVolume(
+                                          _videoController!.value.volume > 0
+                                              ? 0
+                                              : 1);
+                                    });
+                                  },
+                                ),
+                              ),
+
+                              // Time Indicator and Progress Bar
+                              Positioned(
+                                bottom: 10,
+                                left: 10,
+                                right: 10,
+                                child: Column(
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(
+                                          formatDuration(
+                                              _videoController!.value.position),
+                                          style: TextStyle(color: Colors.white),
+                                        ),
+                                        Text(
+                                          formatDuration(
+                                              _videoController!.value.duration),
+                                          style: TextStyle(color: Colors.white),
+                                        ),
+                                      ],
+                                    ),
+                                    VideoProgressIndicator(
+                                      _videoController!,
+                                      allowScrubbing: true,
+                                      colors: VideoProgressColors(
+                                        playedColor: Colors.blue,
+                                        bufferedColor: Colors.grey.shade400,
+                                        backgroundColor: Colors.grey.shade300,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      )
+                    : const Center(child: CircularProgressIndicator())
+                : InkWell(
                     onTap: () {
-                      setState(() {
-                        _isFollowed = !_isFollowed;
-                      });
+                      moveScreen(context,
+                          EnlargedImageView(imageUrl: widget.mediaUrl!));
                     },
                     child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 4),
+                      height: MediaQuery.of(context).size.height * 0.8,
                       decoration: BoxDecoration(
-                        color: _isFollowed
-                            ? HexColor("#87CEEB")
-                            : HexColor("#e1e2e3"),
-                        borderRadius: BorderRadius.circular(5),
-                      ),
-                      child: Text(
-                        _isFollowed ? "Followed ✔️" : "Follow",
-                        style: GoogleFonts.poppins(fontSize: 12),
+                        borderRadius: BorderRadius.circular(8),
+                        image: DecorationImage(
+                          image: NetworkImage(widget.mediaUrl!),
+                          fit: BoxFit.cover,
+                        ),
                       ),
                     ),
                   ),
-                ],
-              ),
-              const Spacer(),
-              IconButton(
-                icon: const Icon(Icons.more_vert, color: Colors.white),
-                onPressed: () {
-                  // Show options
-                },
-              ),
-            ],
           ),
-        ),
-        // Play/Pause Icon
-        if (_isPlayIconVisible && widget.videoUrl != null)
-          Center(
-            child: GestureDetector(
-              onTap: () {
-                setState(() {
-                  if (_videoController!.value.isPlaying) {
-                    showSnackBar(context, "Pausing");
-                    _videoController!.pause();
-                  } else {
-                    showSnackBar(context, "playing");
-                    _videoController!.play();
-                  }
-                });
-              },
-              child: Icon(
-                _videoController!.value.isPlaying
-                    ? Icons.pause_circle_filled
-                    : Icons.play_circle_fill,
-                size: 50,
-                color: Colors.white.withOpacity(0.7),
-              ),
-            ),
-          ),
-        // Video Progress Bar
-        if (widget.videoUrl != null)
+
+          // User Info Overlay
           Positioned(
-            bottom: 10,
+            top: 10,
             left: 10,
             right: 10,
-            child: Column(
+            child: Row(
               children: [
-                VideoProgressIndicator(
-                  _videoController!,
-                  allowScrubbing: true,
-                  colors: VideoProgressColors(
-                    playedColor: Colors.blue,
-                    bufferedColor: Colors.grey.shade400,
-                    backgroundColor: Colors.grey.shade300,
-                  ),
+                CircleAvatar(
+                  radius: 25,
+                  backgroundImage: NetworkImage(widget.profileImageUrl),
                 ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                const SizedBox(width: 10),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    IconButton(
-                      icon: Icon(
-                        _videoController!.value.isPlaying
-                            ? Icons.pause
-                            : Icons.play_arrow,
+                    Text(
+                      widget.username,
+                      style: GoogleFonts.poppins(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
                         color: Colors.white,
                       ),
-                      onPressed: () {
-                        setState(() {
-                          showSnackBar(context, "playing 2");
-                          _videoController!.value.isPlaying
-                              ? _videoController!.pause()
-                              : _videoController!.play();
-                        });
-                      },
                     ),
-                    IconButton(
-                      icon: Icon(
-                        _videoController!.value.volume > 0
-                            ? Icons.volume_up
-                            : Icons.volume_off,
-                        color: Colors.white,
-                      ),
-                      onPressed: () {
+                    GestureDetector(
+                      onTap: () {
                         setState(() {
-                          _videoController!.setVolume(
-                              _videoController!.value.volume > 0 ? 0 : 1);
+                          _isFollowed = !_isFollowed;
                         });
                       },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: _isFollowed
+                              ? HexColor("#87CEEB")
+                              : HexColor("#e1e2e3"),
+                          borderRadius: BorderRadius.circular(5),
+                        ),
+                        child: Text(
+                          _isFollowed ? "Followed ✔️" : "Follow",
+                          style: GoogleFonts.poppins(fontSize: 12),
+                        ),
+                      ),
                     ),
                   ],
+                ),
+                const Spacer(),
+                IconButton(
+                  icon: const Icon(Icons.more_vert, color: Colors.white),
+                  onPressed: () {
+                    // Show options
+                  },
                 ),
               ],
             ),
           ),
-      ],
+          // Play/Pause Icon
+          if (_isPlayIconVisible && widget.videoUrl != null)
+            Center(
+              child: GestureDetector(
+                onTap: () {
+                  setState(() {
+                    if (_videoController!.value.isPlaying) {
+                      showSnackBar(context, "Pausing");
+                      _videoController!.pause();
+                    } else {
+                      showSnackBar(context, "playing");
+                      _videoController!.play();
+                    }
+                  });
+                },
+                child: Icon(
+                  _videoController!.value.isPlaying
+                      ? Icons.pause_circle_filled
+                      : Icons.play_circle_fill,
+                  size: 50,
+                  color: Colors.white.withOpacity(0.7),
+                ),
+              ),
+            ),
+          // Video Progress Bar
+          if (widget.videoUrl != null)
+            Positioned(
+              bottom: 10,
+              left: 10,
+              right: 10,
+              child: Column(
+                children: [
+                  VideoProgressIndicator(
+                    _videoController!,
+                    allowScrubbing: true,
+                    colors: VideoProgressColors(
+                      playedColor: Colors.blue,
+                      bufferedColor: Colors.grey.shade400,
+                      backgroundColor: Colors.grey.shade300,
+                    ),
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      IconButton(
+                        icon: Icon(
+                          _videoController!.value.isPlaying
+                              ? Icons.pause
+                              : Icons.play_arrow,
+                          color: Colors.white,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            showSnackBar(context, "playing 2");
+                            _videoController!.value.isPlaying
+                                ? _videoController!.pause()
+                                : _videoController!.play();
+                          });
+                        },
+                      ),
+                      IconButton(
+                        icon: Icon(
+                          _videoController!.value.volume > 0
+                              ? Icons.volume_up
+                              : Icons.volume_off,
+                          color: Colors.white,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _videoController!.setVolume(
+                                _videoController!.value.volume > 0 ? 0 : 1);
+                          });
+                        },
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
     );
   }
 

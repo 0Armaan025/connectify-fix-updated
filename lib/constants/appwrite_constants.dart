@@ -20,6 +20,9 @@ const String APPWRITE_FORUMS_COLLECTION_ID = "forums-00d";
 const String APPWRITE_FORUM_COMMENTS_COLLECTION_NAME = "forumComments";
 const String APPWRITE_FORUM_COMMENTS_COLLECTION_ID = "forumComments-00d";
 
+const String APPWRITE_POST_COMMENTS_COLLECTION_NAME = "postComments";
+const String APPWRITE_POST_COMMENTS_COLLECTION_ID = "postComments-00d";
+
 //BUCKETS
 const String APPWRITE_PROFILE_PICS_BUCKET_NAME = "profilePics";
 const String APPWRITE_PROFILE_PICS_BUCKET_ID = "profilePics-00d";

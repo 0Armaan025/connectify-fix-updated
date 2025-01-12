@@ -4,6 +4,7 @@ import 'package:appwrite/models.dart';
 import 'package:connectify/common/utils/normal_utils.dart';
 import 'package:connectify/constants/appwrite_constants.dart';
 import 'package:connectify/constants/normal_constants.dart';
+import 'package:connectify/features/views/authentication/sign-up/sign_up_page.dart';
 import 'package:connectify/features/views/profile_set_up/profile_set_up_page.dart';
 import 'package:connectify/features/views/user_blocked/user_blocked_page.dart';
 import 'package:flutter/material.dart';
@@ -21,7 +22,8 @@ class AuthRepository {
       final user = await account.get();
       globalUser = user;
 
-      if (isRegister) moveScreen(context, ProfileSetUpPage());
+      if (isRegister)
+        moveScreen(context, ProfileSetUpPage(), isPushReplacement: true);
     });
 
     return null;
@@ -63,7 +65,7 @@ class AuthRepository {
           "Some error ocurred, report it to Armaan kudasai (please) :D, error: ${error}");
     });
     final user = account.get().then((value) {
-      moveScreen(context, ProfileSetUpPage());
+      moveScreen(context, ProfileSetUpPage(), isPushReplacement: true);
     });
 
     return user;
@@ -75,10 +77,14 @@ class AuthRepository {
       (error) {
         if (error is AppwriteException) {
           if (error.code == 401 && error.message!.contains('blocked')) {
-            moveScreen(context, UserBlockedPage());
+            moveScreen(context, UserBlockedPage(), isPushReplacement: true);
           } else {
             print(
                 'An error occurred: (contact armaan pwease) ${error.message}');
+          }
+        } else if (error is AppwriteException) {
+          if (error.message!.contains('not authorized')) {
+            moveScreen(context, SignUpPage(), isPushReplacement: true);
           }
         }
       },

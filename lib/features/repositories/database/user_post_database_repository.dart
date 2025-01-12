@@ -88,58 +88,77 @@ class UserPostDatabaseRepository {
     return allPosts;
   }
 
-  Future<void> likePost(BuildContext context) async {
+  Future<String> likePost(BuildContext context, String postID) async {
     AuthController controller = AuthController();
     final user = await controller.getCurrentUser(context);
     if (user != null) {
       String uuid = user.$id.toString();
 
-      UserProfileDatabaseController _controller =
-          UserProfileDatabaseController();
-      final models.Document userDoc =
-          await _controller.getUserData(context, uuid);
-
-      Client client = Client();
-      client
+      Client client = Client()
           .setEndpoint(APPWRITE_URL) // Replace with your Appwrite endpoint
           .setProject(
               APPWRITE_PROJECT_ID); // Replace with your Appwrite project ID
-      if (userDoc != null) {
-        List<String> likes = List<String>.from(userDoc.data['likes'] ?? []);
+
+      Databases databases = Databases(client);
+
+      // Query to find the document with the matching postID field
+      final result = await databases.listDocuments(
+        databaseId: APPWRITE_DATABASE_ID,
+        collectionId: APPWRITE_POSTS_COLLECTION_ID,
+        queries: [
+          Query.equal('postID', postID),
+        ],
+      );
+
+      if (result.documents.isNotEmpty) {
+        // Assuming postID is unique and there's only one matching document
+        final postDoc = result.documents.first;
+
+        List<String> likes = List<String>.from(postDoc.data['likes'] ?? []);
 
         if (likes.contains(uuid)) {
           // User has already liked the post, so remove the like
           likes.remove(uuid);
-          final databases = Databases(client);
-
-          final response = await databases.updateDocument(
-              collectionId: APPWRITE_POSTS_COLLECTION_ID,
-              databaseId: APPWRITE_DATABASE_ID,
-              documentId: uuid,
-              data: {
-                'likes': likes
-              },
-              permissions: [
-                Permission.create(Role.any()),
-                Permission.update(Role.any()),
-                Permission.delete(Role.any()),
-                Permission.write(Role.any()),
-                Permission.read(Role.any()),
-              ]);
-          showSnackBar(context, "You have disliked the post.");
+          await databases.updateDocument(
+            databaseId: APPWRITE_DATABASE_ID,
+            collectionId: APPWRITE_POSTS_COLLECTION_ID,
+            documentId: postDoc.$id,
+            data: {
+              'likes': likes,
+            },
+            permissions: [
+              Permission.update(Role.any()),
+              Permission.delete(Role.any()),
+              Permission.write(Role.any()),
+              Permission.read(Role.any()),
+            ],
+          );
+          return 'disliked';
         } else {
           // User has not liked the post, so add the like
           likes.add(uuid);
-          // Update the database to reflect the like
-          await _controller.updateUserLikes(context, uuid, likes);
-          showSnackBar(context, "You have liked the post.");
+          await databases.updateDocument(
+            databaseId: APPWRITE_DATABASE_ID,
+            collectionId: APPWRITE_POSTS_COLLECTION_ID,
+            documentId: postDoc.$id,
+            data: {
+              'likes': likes,
+            },
+            permissions: [
+              Permission.update(Role.any()),
+              Permission.delete(Role.any()),
+              Permission.write(Role.any()),
+              Permission.read(Role.any()),
+            ],
+          );
+          return 'liked';
         }
       } else {
-        showSnackBar(context, "User data not found.");
+        showSnackBar(context, "Post not found.");
       }
     } else {
-      showSnackBar(
-          context, "Unexpected error occurred, please contact Armaan.");
+      showSnackBar(context, "User data not found.");
     }
+    return 'error';
   }
 }

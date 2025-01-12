@@ -4,6 +4,7 @@ import 'package:connectify/common/utils/normal_utils.dart';
 import 'package:connectify/features/controllers/database/user_post_database_controller.dart';
 import 'package:connectify/features/controllers/database/user_profile_database_controller.dart';
 import 'package:connectify/features/modals/post/post_modal.dart';
+import 'package:connectify/features/views/authentication/sign-up/sign_up_page.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
@@ -26,8 +27,20 @@ class _HomePageContentState extends State<HomePageContent> {
   @override
   void initState() {
     super.initState();
-    _postsFuture = _postController.getAllPosts(context);
+    getMyPosts();
     getFilesType(context);
+  }
+
+  getMyPosts() async {
+    _postsFuture = _postController.getAllPosts(context).catchError((error) {
+      // Log the error for debugging
+      if (error.toString().contains("not authorized")) {
+        moveScreen(context, SignUpPage(), isPushReplacement: true);
+      }
+
+      // Return an empty list as a fallback
+      return <PostModal>[];
+    });
   }
 
   getFilesType(BuildContext context) async {
@@ -115,10 +128,11 @@ class _HomePageContentState extends State<HomePageContent> {
 
                     final userDetails = userDetailsSnapshot.data!;
                     return PostWidget(
+                      postID: post.postID,
                       text: post.caption,
                       comments: post.comments,
                       createdAt: post.createdAt,
-                      likes: post.likes.length,
+                      likes: post.likes,
                       profileImageUrl: userDetails['profileImageUrl'] ?? '',
                       username: userDetails['username'] ?? 'Unknown User',
                       mediaUrl: post.mediaUrl != null ? post.mediaUrl : null,

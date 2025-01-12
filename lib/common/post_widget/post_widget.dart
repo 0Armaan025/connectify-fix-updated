@@ -2,20 +2,25 @@ import 'package:appwrite/appwrite.dart';
 import 'package:connectify/common/enlarged_image/enlarged_image_view.dart';
 import 'package:connectify/common/utils/normal_utils.dart';
 import 'package:connectify/common/utils/post_widget_utils.dart';
+import 'package:connectify/features/controllers/database/user_post_database_controller.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hexcolor/hexcolor.dart';
+import 'package:intl/intl.dart';
 import 'package:like_button/like_button.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:video_player/video_player.dart';
+import 'package:timeago/timeago.dart' as timeago;
+
 import 'package:visibility_detector/visibility_detector.dart';
 
 import '../../constants/appwrite_constants.dart';
 import '../../features/apis/file_downloader/file_downloader.dart';
 
 class PostWidget extends StatefulWidget {
+  final String postID;
   final String username;
   final String? imageUrl;
   final String? videoUrl;
@@ -23,7 +28,7 @@ class PostWidget extends StatefulWidget {
   final String profileImageUrl;
   final String createdAt;
   final String? mediaUrl;
-  final int likes;
+  final List<String> likes;
   final List<String> comments;
 
   const PostWidget({
@@ -32,6 +37,7 @@ class PostWidget extends StatefulWidget {
     this.videoUrl,
     this.text,
     this.mediaUrl,
+    required this.postID,
     required this.username,
     required this.profileImageUrl,
     required this.likes,
@@ -48,11 +54,14 @@ class _PostWidgetState extends State<PostWidget> {
   bool _isUserPaused = false;
   bool _isVideoVisible = false;
 
+  int? _likeCount;
+
   VideoPlayerController? _videoController;
   bool isVideo = false;
   bool isLoadingMedia = true;
   bool _isPlayIconVisible = false;
   bool _isPlaying = false;
+  String relativeTime = "";
 
   String BUCKET_ID = "";
   String FILE_ID = "";
@@ -66,6 +75,9 @@ class _PostWidgetState extends State<PostWidget> {
   @override
   void initState() {
     super.initState();
+
+    _likeCount = widget.likes.length; // Initialize with the correct count
+
     _fileDownloader =
         FileDownloader(client); // Assuming client is already initialized
 
@@ -73,6 +85,12 @@ class _PostWidgetState extends State<PostWidget> {
       extractBucketAndFileId(widget.mediaUrl);
       determineFileType(widget.mediaUrl!);
     }
+
+    DateFormat format = DateFormat("EEE, MMM d, yyyy - h:mm a");
+    DateTime parsedDate = format.parse(widget.createdAt);
+    DateTime now = DateTime.now();
+    relativeTime = timeago.format(parsedDate,
+        locale: 'en'); // You can change 'en' to other locales
   }
 
   extractBucketAndFileId(String? url) {
@@ -90,6 +108,21 @@ class _PostWidgetState extends State<PostWidget> {
       FILE_ID = fileId;
       setState(() {});
     }
+  }
+
+  Future<void> likePost(BuildContext context, String postID) async {
+    UserPostDatabaseController controller = UserPostDatabaseController();
+    String value = await controller.likePost(context, postID);
+
+    setState(() {
+      if (value == 'liked') {
+        _likeCount = (_likeCount ?? 0) + 1;
+      } else if (value == 'disliked') {
+        _likeCount = (_likeCount ?? 0) - 1;
+      } else {
+        showSnackBar(context, 'some error occurred please contact Armaan :)');
+      }
+    });
   }
 
   Future<String> getLocalPath() async {
@@ -564,7 +597,7 @@ class _PostWidgetState extends State<PostWidget> {
             margin: const EdgeInsets.only(right: 8),
             alignment: Alignment.centerRight,
             child: Text(
-              "Posted 2 hours ago",
+              "${relativeTime}",
               style: GoogleFonts.poppins(color: Colors.grey.shade700),
             ),
           ),
@@ -575,6 +608,10 @@ class _PostWidgetState extends State<PostWidget> {
                 children: [
                   const SizedBox(width: 10),
                   LikeButton(
+                    onTap: (bool isLiked) async {
+                      await likePost(context, widget.postID);
+                      return !isLiked;
+                    },
                     countPostion: CountPostion.bottom,
                     size: 25,
                     circleColor: const CircleColor(
@@ -583,14 +620,14 @@ class _PostWidgetState extends State<PostWidget> {
                       dotPrimaryColor: Color(0xff33b5e5),
                       dotSecondaryColor: Color(0xff0099cc),
                     ),
-                    likeBuilder: (bool isLiked) {
+                    likeBuilder: (isLiked) {
                       return Icon(
-                        Icons.favorite,
-                        color: isLiked ? Colors.red : Colors.grey,
+                        !isLiked ? Icons.favorite : Icons.favorite_border,
+                        color: !isLiked ? Colors.red : Colors.grey,
                         size: 30,
                       );
                     },
-                    likeCount: widget.likes,
+                    likeCount: _likeCount ?? widget.likes.length,
                   ),
                   const SizedBox(width: 20),
                   IconButton(

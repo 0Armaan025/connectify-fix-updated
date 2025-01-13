@@ -1,7 +1,12 @@
+import 'package:connectify/common/utils/normal_utils.dart';
+import 'package:connectify/features/controllers/authentication/auth_controller.dart';
+import 'package:connectify/features/controllers/database/user_post_database_controller.dart';
+import 'package:connectify/features/repositories/database/user_post_database_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:like_button/like_button.dart';
 
 class CommentTile extends StatefulWidget {
+  final String commentID;
   final String commentText;
   final List<String> likes;
   final VoidCallback onLike;
@@ -15,6 +20,7 @@ class CommentTile extends StatefulWidget {
       required this.onLike,
       required this.createdAt,
       required this.profileImageUrl,
+      required this.commentID,
       required this.username});
 
   @override
@@ -24,9 +30,11 @@ class CommentTile extends StatefulWidget {
 class _CommentTileState extends State<CommentTile> {
   bool _isExpanded = false;
   final int maxWordsLength = 50;
+  bool liked = false;
 
   String displayedText = ""; // Store the text to display
   bool _isLongText = false;
+  int likeCount = 0;
 
   void _showOptionsDialog(BuildContext context) {
     showDialog(
@@ -93,12 +101,26 @@ class _CommentTileState extends State<CommentTile> {
     );
   }
 
-
-
   void _handleReport() {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Comment reported')),
     );
+  }
+
+  void likeComment(BuildContext context, String commentID) async {
+    UserPostDatabaseController controller = UserPostDatabaseController();
+    try {
+      final value = await controller.likeComment(context, commentID);
+      if (value == 'liked') {
+        liked = true;
+      } else if (value == 'disliked') {
+        liked = false;
+      } else {
+        showSnackBar(context, 'Error: Unable to like comment.');
+      }
+    } catch (error) {
+      showSnackBar(context, 'Error liking comment: $error');
+    }
   }
 
   void _handleViewProfile() {
@@ -111,6 +133,31 @@ class _CommentTileState extends State<CommentTile> {
   void initState() {
     super.initState();
     _getCommentText();
+    getCount();
+    checkUserExistenceInLikes();
+  }
+
+  checkUserExistenceInLikes() async {
+    await checkForUser();
+  }
+
+  checkForUser() async {
+    AuthController _controller = AuthController();
+
+    final user = await _controller.getCurrentUser(context);
+
+    if (user != null) {
+      liked = widget.likes.contains(user.$id);
+    }
+  }
+
+  getCount() {
+    getLikeCountHere();
+  }
+
+  getLikeCountHere() async {
+    likeCount = await getLikeCount(context, widget.commentID);
+    setState(() {});
   }
 
   void _getCommentText() {
@@ -120,6 +167,13 @@ class _CommentTileState extends State<CommentTile> {
     displayedText = _isLongText
         ? '${words.take(maxWordsLength).join(' ')}...'
         : widget.commentText;
+  }
+
+  Future<int> getLikeCount(BuildContext context, String commentID) async {
+    UserPostDatabaseRepository _firstTimeRepo = UserPostDatabaseRepository();
+    String likesCount =
+        await _firstTimeRepo.getCommentLikes(context, commentID);
+    return int.parse(likesCount);
   }
 
   @override
@@ -171,6 +225,28 @@ class _CommentTileState extends State<CommentTile> {
                 Padding(
                   padding: const EdgeInsets.only(right: 14.0),
                   child: LikeButton(
+                    onTap: (isLiked) async {
+                      final wasLiked = liked; // Store the current state
+                      try {
+                        likeComment(context, widget.commentID);
+
+                        // Update like count and state based on the result
+                        setState(() {
+                          liked = !wasLiked;
+                          if (liked) {
+                            likeCount += 1; // Increment count if liked
+                          } else {
+                            likeCount -= 1; // Decrement count if unliked
+                          }
+                        });
+
+                        return !wasLiked; // Return the new like state
+                      } catch (error) {
+                        showSnackBar(
+                            context, 'Error liking comment. Try again.');
+                        return wasLiked; // Revert to the old state in case of error
+                      }
+                    },
                     size: 30,
                     circleColor: const CircleColor(
                         start: Color(0xff00ddff), end: Color(0xff0099cc)),
@@ -181,27 +257,18 @@ class _CommentTileState extends State<CommentTile> {
                     likeBuilder: (bool isLiked) {
                       return Icon(
                         Icons.favorite,
-                        color: isLiked ? Colors.red.shade800 : Colors.grey,
+                        color: liked ? Colors.red.shade800 : Colors.grey,
                         size: 30,
                       );
                     },
-                    likeCount: widget.likes.length,
+                    likeCount: likeCount,
                     countBuilder: (int? count, bool isLiked, String text) {
-                      var color =
+                      final color =
                           isLiked ? Colors.deepPurpleAccent : Colors.grey;
-                      Widget? result;
-                      if (count == 0) {
-                        result = Text(
-                          "love",
-                          style: TextStyle(color: color),
-                        );
-                      } else {
-                        result = Text(
-                          text,
-                          style: TextStyle(color: color),
-                        );
-                      }
-                      return result;
+                      return Text(
+                        count == 0 ? "0" : text,
+                        style: TextStyle(color: color),
+                      );
                     },
                     countPostion: CountPostion.bottom,
                   ),

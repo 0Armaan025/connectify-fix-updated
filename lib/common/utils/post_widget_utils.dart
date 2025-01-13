@@ -171,6 +171,7 @@ void showComments(BuildContext context, String postID,
                       itemBuilder: (context, index) {
                         final comment = comments[index];
                         return CommentTile(
+                          commentID: comment.commentID,
                           commentText: comment.comment,
                           createdAt: comment.createdAt,
                           likes: List<String>.from(

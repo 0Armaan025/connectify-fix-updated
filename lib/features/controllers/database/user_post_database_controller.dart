@@ -25,9 +25,10 @@ class UserPostDatabaseController {
     return await _repo.likePost(context, postID);
   }
 
-  Future<String> likeComment(BuildContext context, String postID) async {
-    UserPostDatabaseController _repo = UserPostDatabaseController();
-    return await _repo.likeComment(context, postID);
+  Future<String> likeComment(BuildContext context, String commentID) async {
+    UserPostDatabaseRepository _repo = UserPostDatabaseRepository();
+    String status = await _repo.likeComment(context, commentID);
+    return status;
   }
 
   Future<void> commentOnPost(

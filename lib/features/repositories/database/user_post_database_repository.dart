@@ -189,6 +189,28 @@ class UserPostDatabaseRepository {
     }
   }
 
+  Future<String> getCommentLikes(BuildContext context, String commentID) async {
+    final databases = Databases(client);
+
+    final result = await databases.listDocuments(
+      databaseId: APPWRITE_DATABASE_ID,
+      collectionId: APPWRITE_POST_COMMENTS_COLLECTION_ID,
+      queries: [
+        Query.equal('commentID', commentID),
+      ],
+    );
+
+    if (result.documents.isNotEmpty) {
+      final commentDoc = result.documents.first;
+
+      List<String> likes = List<String>.from(commentDoc.data['likes'] ?? []);
+
+      return likes.length.toString();
+    } else {
+      throw Exception('Comment with ID $commentID not found.');
+    }
+  }
+
   Future<String> likeComment(BuildContext context, String commentID) async {
     AuthController controller = AuthController();
     final user = await controller.getCurrentUser(context);
@@ -202,7 +224,8 @@ class UserPostDatabaseRepository {
 
       Databases databases = Databases(client);
 
-      // Query to find the document with the matching postID field
+      // showSnackBar(context, 'the id we received is : $commentID');
+      print('we in here broi $commentID');
       final result = await databases.listDocuments(
         databaseId: APPWRITE_DATABASE_ID,
         collectionId: APPWRITE_POST_COMMENTS_COLLECTION_ID,
@@ -212,8 +235,10 @@ class UserPostDatabaseRepository {
       );
 
       if (result.documents.isNotEmpty) {
-        // Assuming postID is unique and there's only one matching document
         final commentDoc = result.documents.first;
+
+        print('commentDoc ID is ${commentDoc.$id}');
+        print("ID BY THE USER OF THE COMMENT IS ${commentID}");
 
         List<String> likes = List<String>.from(commentDoc.data['likes'] ?? []);
 
@@ -222,8 +247,8 @@ class UserPostDatabaseRepository {
           likes.remove(uuid);
           await databases.updateDocument(
             databaseId: APPWRITE_DATABASE_ID,
-            collectionId: APPWRITE_FORUM_COMMENTS_COLLECTION_ID,
-            documentId: commentDoc.$id,
+            collectionId: APPWRITE_POST_COMMENTS_COLLECTION_ID,
+            documentId: commentID,
             data: {
               'likes': likes,
             },
@@ -241,7 +266,7 @@ class UserPostDatabaseRepository {
           await databases.updateDocument(
             databaseId: APPWRITE_DATABASE_ID,
             collectionId: APPWRITE_POST_COMMENTS_COLLECTION_ID,
-            documentId: commentDoc.$id,
+            documentId: commentID,
             data: {
               'likes': likes,
             },

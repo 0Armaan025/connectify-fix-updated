@@ -57,10 +57,11 @@ class AuthRepository {
     Account account = Account(client);
     account
         .createOAuth2Session(
-          provider: OAuthProvider.google,
-        )
-        .then((_) {})
-        .onError((error, stackTrace) {
+      provider: OAuthProvider.google,
+    )
+        .then((_) {
+      moveScreen(context, ProfileSetUpPage(), isPushReplacement: true);
+    }).onError((error, stackTrace) {
       showSnackBar(context,
           "Some error ocurred, report it to Armaan kudasai (please) :D, error: ${error}");
     });

@@ -54,6 +54,26 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
               ),
 
               const Divider(),
+
+              ListTile(
+                title: Text(
+                  "Know more!",
+                  style: GoogleFonts.poppins(),
+                ),
+                leading: CircleAvatar(
+                  radius: 25,
+                  backgroundColor: Colors.grey.shade300,
+                  backgroundImage: const NetworkImage(
+                      'https://cdn-icons-png.flaticon.com/128/9195/9195785.png'),
+                ),
+                subtitle: Text("Armaan says to click here and know more!!!"),
+                trailing: const Icon(Icons.arrow_forward_ios),
+                onTap: () {
+                  // Navigate to Profile Editing Screen
+                },
+              ),
+
+              const Divider(),
               // Account Deletion
               ListTile(
                 title: Text(

@@ -7,13 +7,12 @@ class UserForumStorageController {
   Future<String> saveUserProfileImage(
     BuildContext context,
     File file,
-    bool isImage,
-    bool isPdf,
+
   ) async {
     UserForumStorageRepository _userForumStorageRepository =
         UserForumStorageRepository();
 
     return await _userForumStorageRepository.saveUserPostMedia(
-        context, file, isImage, isPdf);
+        context, file);
   }
 }

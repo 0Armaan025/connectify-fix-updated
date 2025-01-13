@@ -1,15 +1,16 @@
 import 'dart:io';
 import 'dart:typed_data';
+
 import 'package:appwrite/appwrite.dart';
 import 'package:mime/mime.dart';
+import 'package:path_provider/path_provider.dart';
 
 class FileDownloader {
   final Client client;
 
   FileDownloader(this.client);
 
-  Future<File?> downloadFile(
-      String bucketId, String fileId, String localPath) async {
+  Future<File?> downloadFile(String bucketId, String fileId) async {
     try {
       Storage storage = Storage(client);
       final Uint8List fileBytes = await storage.getFileDownload(
@@ -26,7 +27,10 @@ class FileDownloader {
         print('Unable to determine file type');
       }
 
-      // Save the file locally
+      final tempDir = await getTemporaryDirectory();
+      final localPath = '${tempDir.path}/temp_file';
+
+      // Save the file in the temporary directory
       final file = File(localPath);
       await file.writeAsBytes(fileBytes);
 
@@ -37,7 +41,6 @@ class FileDownloader {
     }
   }
 
-  // Function to get the file type from bytes
   Future<String?> getFileTypeFromBytes(Uint8List bytes) async {
     final mimeType = lookupMimeType('', headerBytes: bytes);
     if (mimeType != null) {

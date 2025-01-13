@@ -15,24 +15,17 @@ class UserForumStorageRepository {
   Future<String> saveUserPostMedia(
     BuildContext context,
     File mediaFile,
-    bool isImage,
-    bool isPdf,
   ) async {
     try {
       // Check and process the file based on type
-      final processedFile = isImage
-          ? await compressImage(mediaFile)
-          : !isPdf
-              ? await compressVideo(mediaFile)
-              : mediaFile;
-
+      final processedFile = await compressImage(mediaFile);
       // Check final file size
       int sizeInBytes = processedFile.lengthSync();
       double sizeInMB = sizeInBytes / (1024 * 1024);
       if (sizeInMB > 120) {
         showSnackBar(
           context,
-          "The ${isImage ? 'image' : isPdf ? 'pdf' : 'video'} exceeds the maximum allowed size of 120 MB. Please upload a smaller file.",
+          "The image exceeds the maximum allowed size of 120 MB. Please upload a smaller file.",
         );
         throw Exception("File size exceeds 120 MB.");
       }

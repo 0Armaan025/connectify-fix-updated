@@ -9,7 +9,7 @@ class ForumCommentModal {
   final String mediaUrl;
   final String commentContent;
   final List<String> upvotes;
-  final String forumID;
+
   final String createdAt;
   ForumCommentModal({
     required this.forumCommentID,
@@ -17,7 +17,6 @@ class ForumCommentModal {
     required this.mediaUrl,
     required this.commentContent,
     required this.upvotes,
-    required this.forumID,
     required this.createdAt,
   });
 
@@ -27,7 +26,6 @@ class ForumCommentModal {
     String? mediaUrl,
     String? commentContent,
     List<String>? upvotes,
-    String? forumID,
     String? createdAt,
   }) {
     return ForumCommentModal(
@@ -36,7 +34,6 @@ class ForumCommentModal {
       mediaUrl: mediaUrl ?? this.mediaUrl,
       commentContent: commentContent ?? this.commentContent,
       upvotes: upvotes ?? this.upvotes,
-      forumID: forumID ?? this.forumID,
       createdAt: createdAt ?? this.createdAt,
     );
   }
@@ -48,7 +45,6 @@ class ForumCommentModal {
       'mediaUrl': mediaUrl,
       'commentContent': commentContent,
       'upvotes': upvotes,
-      'forumID': forumID,
       'createdAt': createdAt,
     };
   }
@@ -60,7 +56,6 @@ class ForumCommentModal {
       mediaUrl: map['mediaUrl'] as String,
       commentContent: map['commentContent'] as String,
       upvotes: List<String>.from((map['upvotes'] as List<String>)),
-      forumID: map['forumID'] as String,
       createdAt: map['createdAt'] as String,
     );
   }
@@ -72,7 +67,7 @@ class ForumCommentModal {
 
   @override
   String toString() {
-    return 'ForumCommentModal(forumCommentID: $forumCommentID, uuid: $uuid, mediaUrl: $mediaUrl, commentContent: $commentContent, upvotes: $upvotes, forumID: $forumID, createdAt: $createdAt)';
+    return 'ForumCommentModal(forumCommentID: $forumCommentID, uuid: $uuid, mediaUrl: $mediaUrl, commentContent: $commentContent, upvotes: $upvotes, createdAt: $createdAt)';
   }
 
   @override
@@ -84,7 +79,6 @@ class ForumCommentModal {
         other.mediaUrl == mediaUrl &&
         other.commentContent == commentContent &&
         listEquals(other.upvotes, upvotes) &&
-        other.forumID == forumID &&
         other.createdAt == createdAt;
   }
 
@@ -95,7 +89,6 @@ class ForumCommentModal {
         mediaUrl.hashCode ^
         commentContent.hashCode ^
         upvotes.hashCode ^
-        forumID.hashCode ^
         createdAt.hashCode;
   }
 }

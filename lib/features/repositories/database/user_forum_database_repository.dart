@@ -17,8 +17,8 @@ class UserForumDatabaseRepository {
   Client client =
       Client().setEndpoint(APPWRITE_URL).setProject(APPWRITE_PROJECT_ID);
 
-  Future<void> createForumPost(BuildContext context, ForumModal modal,
-      File? mediaFile, bool isImage, bool isPdf) async {
+  Future<void> createForumPost(
+      BuildContext context, ForumModal modal, File? mediaFile) async {
     String mediaPreviewURL = '';
 
     final databases = Databases(client);
@@ -37,7 +37,7 @@ class UserForumDatabaseRepository {
 
         if (mediaFile != null) {
           mediaPreviewURL = await UserForumStorageController()
-              .saveUserProfileImage(context, mediaFile, isImage, isPdf);
+              .saveUserProfileImage(context, mediaFile);
         } else {
           mediaPreviewURL = '';
         }
@@ -53,7 +53,7 @@ class UserForumDatabaseRepository {
             .createDocument(
           databaseId: APPWRITE_DATABASE_ID,
           collectionId: APPWRITE_FORUMS_COLLECTION_ID,
-          documentId: ID.unique().toString(),
+          documentId: forumID,
           data: updatedModal.toMap(),
         )
             .then((value) {
@@ -68,6 +68,49 @@ class UserForumDatabaseRepository {
     } else {
       showSnackBar(context,
           "please re-register or something, error sorry contact aRmaan");
+    }
+  }
+
+  Future<List<ForumModal>> fetchForumPosts(BuildContext context) async {
+    List<ForumModal> forumPosts = [];
+    final databases = Databases(client);
+
+    try {
+      final posts = await databases.listDocuments(
+        databaseId: APPWRITE_DATABASE_ID,
+        collectionId: APPWRITE_FORUMS_COLLECTION_ID,
+        queries: [
+          Query.equal('isPublic', true),
+        ],
+      );
+
+      for (models.Document post in posts.documents) {
+        forumPosts.add(ForumModal.fromMap(post.data));
+      }
+    } catch (e) {
+      // Handle exceptions
+      print('Error fetching forum posts: $e');
+    }
+
+    return forumPosts;
+  }
+
+  Future<ForumModal?> fetchForumPostById(
+      BuildContext context, String forumID) async {
+    final databases = Databases(client);
+
+    try {
+      final document = await databases.getDocument(
+        databaseId: APPWRITE_DATABASE_ID,
+        collectionId: APPWRITE_FORUMS_COLLECTION_ID,
+        documentId: forumID,
+      );
+
+      return ForumModal.fromMap(document.data);
+    } catch (e) {
+      // Handle exceptions, e.g., document not found
+      print('Error fetching forum post by ID: $e');
+      return null;
     }
   }
 }

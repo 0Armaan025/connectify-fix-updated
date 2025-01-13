@@ -1,4 +1,6 @@
 import 'package:connectify/common/utils/normal_utils.dart';
+import 'package:connectify/features/controllers/authentication/auth_controller.dart';
+import 'package:connectify/features/controllers/database/user_profile_database_controller.dart';
 import 'package:connectify/features/views/thread/thread_view.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -6,17 +8,52 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:hexcolor/hexcolor.dart';
 
 class ForumPost extends StatefulWidget {
-  const ForumPost({super.key});
+  final String uuid;
+  final String createdAt;
+  final String forumID;
+  final String forumContent;
+  final String mediaUrl;
+  final List<String> upvotes;
+  const ForumPost(
+      {super.key,
+      required this.uuid,
+      required this.createdAt,
+      required this.forumContent,
+      required this.forumID,
+      required this.mediaUrl,
+      required this.upvotes});
 
   @override
   State<ForumPost> createState() => _ForumPostState();
 }
 
 class _ForumPostState extends State<ForumPost> {
+  String _username = "";
+  String _profileImageUrl = "";
+
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
+    getData();
+  }
+
+  getData() async {
+    await getUserData();
+  }
+
+  Future<void> getUserData() async {
+    final user = await AuthController().getCurrentUser(context);
+    if (user != null) {
+      final userUUID = user.$id;
+      UserProfileDatabaseController _controller =
+          UserProfileDatabaseController();
+      final userModal = await _controller.getUserData(context, userUUID);
+      _username = userModal.data['username'];
+      _profileImageUrl = userModal.data['profileImageUrl'];
+      setState(() {});
+    } else {
+      showSnackBar(context, 'some error is coming, pwease contact armaan :((');
+    }
   }
 
   @override
@@ -86,7 +123,7 @@ class _ForumPostState extends State<ForumPost> {
               width: double.infinity,
               alignment: Alignment.centerRight,
               child: Text(
-                "FORUM ID: 3124132432",
+                "FORUM ID: ${widget.forumID}",
                 style: GoogleFonts.poppins(color: Colors.grey.shade700),
               ),
             ),
@@ -113,7 +150,7 @@ class _ForumPostState extends State<ForumPost> {
                 Padding(
                   padding: const EdgeInsets.only(right: 2.0),
                   child: Text(
-                    "8 days ago",
+                    "${widget.createdAt}",
                     style: GoogleFonts.poppins(color: Colors.grey.shade700),
                   ),
                 ),
@@ -128,8 +165,7 @@ class _ForumPostState extends State<ForumPost> {
               children: [
                 Expanded(
                   child: Text(
-                    _truncateText(
-                        "How to create a forum post in Flutter and manage long texts effectively?"),
+                    _truncateText("${widget.forumContent}"),
                     style: GoogleFonts.poppins(
                       color: Colors.black,
                       fontSize: 16,
@@ -159,7 +195,7 @@ class _ForumPostState extends State<ForumPost> {
                         height: 5,
                       ),
                       Text(
-                        "28k",
+                        "${widget.upvotes.length}",
                         style: TextStyle(color: Colors.grey.shade600),
                       ),
                     ],

@@ -6,16 +6,45 @@ import 'package:connectify/features/repositories/database/user_forum_database_re
 import 'package:flutter/material.dart';
 
 class UserForumDatabaseController {
-  Future<void> createForumPost(BuildContext context, ForumModal modal,
-      File? mediaFile, bool isImage, bool isPdf) async {
+  Future<void> createForumPost(
+      BuildContext context, ForumModal modal, File? mediaFile) async {
     UserForumDatabaseRepository _userForumDatabaseRepository =
         UserForumDatabaseRepository();
 
     try {
       await _userForumDatabaseRepository.createForumPost(
-          context, modal, mediaFile, isImage, isPdf);
+        context,
+        modal,
+        mediaFile,
+      );
     } catch (e) {
       showSnackBar(context, 'caught issue here: ${e.toString()}');
+    }
+  }
+
+  Future<List<ForumModal>> getAllForumPosts(BuildContext context) async {
+    UserForumDatabaseRepository _userForumDatabaseRepository =
+        UserForumDatabaseRepository();
+
+    try {
+      return await _userForumDatabaseRepository.fetchForumPosts(context);
+    } catch (e) {
+      showSnackBar(context, 'caught issue here: ${e.toString()}');
+      return [];
+    }
+  }
+
+  Future<ForumModal?> fetchFormPostByID(
+      BuildContext context, String forumID) async {
+    UserForumDatabaseRepository _userForumDatabaseRepository =
+        UserForumDatabaseRepository();
+
+    try {
+      return await _userForumDatabaseRepository.fetchForumPostById(
+          context, forumID);
+    } catch (e) {
+      showSnackBar(context, 'caught issue here: ${e.toString()}');
+      return null;
     }
   }
 }

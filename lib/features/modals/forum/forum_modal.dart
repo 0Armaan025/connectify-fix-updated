@@ -63,9 +63,9 @@ class ForumModal {
       forumID: map['forumID'] as String,
       uuid: map['uuid'] as String,
       description: map['description'] as String,
-      upvotes: List<String>.from((map['upvotes'] as List<String>)),
+      upvotes: List<String>.from((map['upvotes'] ?? [])),
       mediaUrl: map['mediaUrl'] as String,
-      forumComments: List<String>.from((map['forumComments'] as List<String>)),
+      forumComments: List<String>.from((map['forumComments'] ?? [])),
       isPublic: map['isPublic'] as bool,
       createdAt: map['createdAt'] as String,
     );

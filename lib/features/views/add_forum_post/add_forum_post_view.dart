@@ -80,7 +80,7 @@ class _AddForumPostViewState extends State<AddForumPostView> {
       // if(_selectedImage!=null) {
       try {
         controller.createForumPost(
-            context, modal, _selectedImage, isImage, isPdf);
+            context, modal, _selectedImage);
         print('Forum post created successfully');
       } catch (e) {
         print('Error creating forum post: $e');

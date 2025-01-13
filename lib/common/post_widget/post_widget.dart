@@ -138,9 +138,9 @@ class _PostWidgetState extends State<PostWidget> {
       final path = await getLocalPath();
 
       final file = await _fileDownloader.downloadFile(
-          BUCKET_ID, // Replace with actual bucket ID
-          FILE_ID, // Replace with actual file ID
-          "$path${DateTime.now().microsecondsSinceEpoch.toString()}");
+        BUCKET_ID, // Replace with actual bucket ID
+        FILE_ID, // Replace with actual file ID
+      );
 
       if (file != null) {
         final fileBytes = await file.readAsBytes();

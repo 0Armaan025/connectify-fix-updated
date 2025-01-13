@@ -5,6 +5,7 @@ import 'package:connectify/common/utils/post_widget_utils.dart';
 import 'package:connectify/features/controllers/database/user_post_database_controller.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hexcolor/hexcolor.dart';
 import 'package:intl/intl.dart';
@@ -18,6 +19,7 @@ import 'package:visibility_detector/visibility_detector.dart';
 
 import '../../constants/appwrite_constants.dart';
 import '../../features/apis/file_downloader/file_downloader.dart';
+import '../../features/modals/post_comment/post_comment_modal.dart';
 
 class PostWidget extends StatefulWidget {
   final String postID;
@@ -56,6 +58,8 @@ class _PostWidgetState extends State<PostWidget> {
 
   int? _likeCount;
 
+  TextEditingController commentController = TextEditingController();
+
   VideoPlayerController? _videoController;
   bool isVideo = false;
   bool isLoadingMedia = true;
@@ -89,8 +93,7 @@ class _PostWidgetState extends State<PostWidget> {
     DateFormat format = DateFormat("EEE, MMM d, yyyy - h:mm a");
     DateTime parsedDate = format.parse(widget.createdAt);
     DateTime now = DateTime.now();
-    relativeTime = timeago.format(parsedDate,
-        locale: 'en'); // You can change 'en' to other locales
+    relativeTime = timeago.format(parsedDate, locale: 'en');
   }
 
   extractBucketAndFileId(String? url) {
@@ -172,6 +175,7 @@ class _PostWidgetState extends State<PostWidget> {
 
   @override
   void dispose() {
+    commentController.dispose();
     _videoController?.dispose();
     super.dispose();
   }
@@ -637,7 +641,23 @@ class _PostWidgetState extends State<PostWidget> {
                       size: 25,
                     ),
                     onPressed: () {
-                      showComments(context);
+                      showComments(context, widget.postID, commentController,
+                          () async {
+                        UserPostDatabaseController _controller =
+                            UserPostDatabaseController();
+
+                        PostCommentModal modal = PostCommentModal(
+                            commentID: '',
+                            username: '',
+                            profileImageUrl: '',
+                            createdAt: '',
+                            likes: [""],
+                            comment: commentController.text.toString());
+                        await _controller.commentOnPost(
+                            context, widget.postID, modal);
+                        commentController.text = "";
+                        setState(() {});
+                      });
                     },
                   ),
                 ],

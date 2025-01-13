@@ -6,6 +6,7 @@ import 'package:connectify/features/controllers/authentication/auth_controller.d
 import 'package:connectify/features/controllers/database/user_profile_database_controller.dart';
 import 'package:connectify/features/controllers/storage/user_post_storage_controller.dart';
 import 'package:connectify/features/modals/post/post_modal.dart';
+import 'package:connectify/features/modals/post_comment/post_comment_modal.dart';
 import 'package:connectify/features/views/home/home_view.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -160,5 +161,201 @@ class UserPostDatabaseRepository {
       showSnackBar(context, "User data not found.");
     }
     return 'error';
+  }
+
+  Future<String> getUserName(BuildContext context) async {
+    UserProfileDatabaseController controller = UserProfileDatabaseController();
+
+    final user = await AuthController().getCurrentUser(context);
+    if (user != null) {
+      final userUUID = user.$id.toString();
+      final userData = await controller.getUserData(context, userUUID);
+      return userData.data['username'];
+    } else {
+      throw Exception('an error ocurred please contact armaan, sorry!');
+    }
+  }
+
+  Future<String> getUserProfileImage(BuildContext context) async {
+    UserProfileDatabaseController controller = UserProfileDatabaseController();
+
+    final user = await AuthController().getCurrentUser(context);
+    if (user != null) {
+      final userUUID = user.$id.toString();
+      final userData = await controller.getUserData(context, userUUID);
+      return userData.data['profileImageUrl'];
+    } else {
+      throw Exception('an error ocurred please contact armaan, sorry!');
+    }
+  }
+
+  Future<String> likeComment(BuildContext context, String commentID) async {
+    AuthController controller = AuthController();
+    final user = await controller.getCurrentUser(context);
+    if (user != null) {
+      String uuid = user.$id.toString();
+
+      Client client = Client()
+          .setEndpoint(APPWRITE_URL) // Replace with your Appwrite endpoint
+          .setProject(
+              APPWRITE_PROJECT_ID); // Replace with your Appwrite project ID
+
+      Databases databases = Databases(client);
+
+      // Query to find the document with the matching postID field
+      final result = await databases.listDocuments(
+        databaseId: APPWRITE_DATABASE_ID,
+        collectionId: APPWRITE_POST_COMMENTS_COLLECTION_ID,
+        queries: [
+          Query.equal('commentID', commentID),
+        ],
+      );
+
+      if (result.documents.isNotEmpty) {
+        // Assuming postID is unique and there's only one matching document
+        final commentDoc = result.documents.first;
+
+        List<String> likes = List<String>.from(commentDoc.data['likes'] ?? []);
+
+        if (likes.contains(uuid)) {
+          // User has already liked the post, so remove the like
+          likes.remove(uuid);
+          await databases.updateDocument(
+            databaseId: APPWRITE_DATABASE_ID,
+            collectionId: APPWRITE_FORUM_COMMENTS_COLLECTION_ID,
+            documentId: commentDoc.$id,
+            data: {
+              'likes': likes,
+            },
+            permissions: [
+              Permission.update(Role.any()),
+              Permission.delete(Role.any()),
+              Permission.write(Role.any()),
+              Permission.read(Role.any()),
+            ],
+          );
+          return 'disliked';
+        } else {
+          // User has not liked the post, so add the like
+          likes.add(uuid);
+          await databases.updateDocument(
+            databaseId: APPWRITE_DATABASE_ID,
+            collectionId: APPWRITE_POST_COMMENTS_COLLECTION_ID,
+            documentId: commentDoc.$id,
+            data: {
+              'likes': likes,
+            },
+            permissions: [
+              Permission.update(Role.any()),
+              Permission.delete(Role.any()),
+              Permission.write(Role.any()),
+              Permission.read(Role.any()),
+            ],
+          );
+          return 'liked';
+        }
+      } else {
+        showSnackBar(context, "Post not found.");
+      }
+    } else {
+      showSnackBar(context, "User data not found.");
+    }
+    return 'error';
+  }
+
+  Future<void> commentOnPost(
+      BuildContext context, PostCommentModal modal, String postID) async {
+    final databases = Databases(client);
+
+    // Generate unique commentID
+    String commentID = generateAlphanumericUID();
+
+    String username = await getUserName(context);
+    String profileImageUrl = await getUserProfileImage(context);
+
+    final newModal = modal.copyWith(
+      username: username,
+      profileImageUrl: profileImageUrl,
+      commentID: commentID,
+      likes: [""],
+      createdAt:
+          DateFormat('EEE, MMM d, yyyy - hh:mm a').format(DateTime.now()),
+    );
+
+    await databases.createDocument(
+      databaseId: APPWRITE_DATABASE_ID,
+      collectionId: APPWRITE_POST_COMMENTS_COLLECTION_ID,
+      documentId: commentID,
+      data: newModal.toMap(),
+    );
+
+    final result = await databases.listDocuments(
+      databaseId: APPWRITE_DATABASE_ID,
+      collectionId: APPWRITE_POSTS_COLLECTION_ID,
+      queries: [
+        Query.equal('postID', postID),
+      ],
+    );
+
+    if (result.documents.isNotEmpty) {
+      final post = result.documents.first;
+
+      final List<String> comments =
+          List<String>.from(post.data['comments'] ?? []);
+
+      comments.add(commentID);
+
+      await databases.updateDocument(
+        databaseId: APPWRITE_DATABASE_ID,
+        collectionId: APPWRITE_POSTS_COLLECTION_ID,
+        documentId: post.$id,
+        data: {
+          'comments': comments,
+        },
+      );
+    } else {
+      throw Exception('Post with ID $postID not found.');
+    }
+  }
+
+  Future<List<PostCommentModal>> getComments(
+      BuildContext context, String postID) async {
+    final databases = Databases(client);
+
+    final result = await databases.listDocuments(
+      databaseId: APPWRITE_DATABASE_ID,
+      collectionId: APPWRITE_POSTS_COLLECTION_ID,
+      queries: [
+        Query.equal('postID', postID),
+      ],
+    );
+
+    if (result.documents.isNotEmpty) {
+      final post = result.documents.first;
+
+      final List<String> commentIDs =
+          List<String>.from(post.data['comments'] ?? []);
+
+      List<PostCommentModal> comments = [];
+
+      for (String commentID in commentIDs) {
+        final commentResult = await databases.listDocuments(
+          databaseId: APPWRITE_DATABASE_ID,
+          collectionId: APPWRITE_POST_COMMENTS_COLLECTION_ID,
+          queries: [
+            Query.equal('commentID', commentID),
+          ],
+        );
+
+        if (commentResult.documents.isNotEmpty) {
+          final comment = commentResult.documents.first;
+          comments.add(PostCommentModal.fromMap(comment.data));
+        }
+      }
+
+      return comments;
+    } else {
+      throw Exception('Post with ID $postID not found.');
+    }
   }
 }

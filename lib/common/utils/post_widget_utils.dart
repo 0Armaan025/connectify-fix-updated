@@ -1,3 +1,5 @@
+import 'package:connectify/features/controllers/database/user_post_database_controller.dart';
+import 'package:connectify/features/modals/post_comment/post_comment_modal.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -6,14 +8,15 @@ import '../comment_tile/comment_tile.dart';
 import '../enlarged_image/enlarged_image_view.dart';
 import 'normal_utils.dart';
 
-showMessageField(BuildContext context) {
+showMessageField(BuildContext context, String postID,
+    TextEditingController commentController, VoidCallback onSend) {
   final size = MediaQuery.of(context).size;
 
   return Column(
     children: [
       SizedBox(
-        height: size.height * 0.36,
-      ),
+          // height: size.height * 0.16,
+          ),
       Row(
         children: [
           const SizedBox(width: 8),
@@ -26,6 +29,7 @@ showMessageField(BuildContext context) {
                 borderRadius: BorderRadius.circular(8),
               ),
               child: TextFormField(
+                controller: commentController,
                 decoration: const InputDecoration(
                   hintText: "Add a comment...",
                   border: InputBorder.none,
@@ -48,9 +52,7 @@ showMessageField(BuildContext context) {
             backgroundColor: Colors.green,
             child: IconButton(
               icon: const Icon(Icons.send, color: Colors.white),
-              onPressed: () {
-                print("Send button clicked");
-              },
+              onPressed: onSend,
             ),
           ),
           const SizedBox(width: 8),
@@ -60,14 +62,31 @@ showMessageField(BuildContext context) {
   );
 }
 
-showComments(BuildContext context) {
+Future<List<PostCommentModal>> returnComments(
+    BuildContext context, String postID) async {
+  UserPostDatabaseController userPostDatabaseController =
+      UserPostDatabaseController();
+  List<PostCommentModal> comments =
+      await userPostDatabaseController.getComments(context, postID);
+
+  if (comments == null || comments.isEmpty) {
+    showSnackBar(context, 'No comments yet :/');
+    return [];
+  } else {
+    return comments;
+  }
+}
+
+void showComments(BuildContext context, String postID,
+    TextEditingController commentController, VoidCallback onSend) {
   final size = MediaQuery.of(context).size;
+
+  // Cache the future
+  final Future<List<PostCommentModal>> commentsFuture =
+      returnComments(context, postID);
+
   showModalBottomSheet(
     isScrollControlled: true,
-    transitionAnimationController: AnimationController(
-      vsync: Navigator.of(context),
-      duration: const Duration(milliseconds: 300),
-    ),
     context: context,
     isDismissible: true,
     shape: const RoundedRectangleBorder(
@@ -79,46 +98,98 @@ showComments(BuildContext context) {
     builder: (context) {
       return SizedBox(
         height: size.height * 0.86,
-        width: double.infinity,
         child: Padding(
           padding: EdgeInsets.only(
             bottom: MediaQuery.of(context).viewInsets.bottom,
           ),
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const SizedBox(height: 20),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    const SizedBox(width: 10),
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.pop(context);
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              // Header Section
+              const SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  const SizedBox(width: 10),
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.pop(context);
+                    },
+                    child: Icon(
+                      CupertinoIcons.back,
+                      color: Colors.grey.shade700,
+                      size: 35,
+                    ),
+                  ),
+                  const SizedBox(width: 5),
+                  Text(
+                    "Comments",
+                    style: GoogleFonts.poppins(
+                      color: Colors.grey.shade800,
+                      fontSize: 22,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+
+              // Comments Section (Scrollable)
+              Expanded(
+                child: FutureBuilder<List<PostCommentModal>>(
+                  future: commentsFuture, // Use the cached future
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(
+                        child: CircularProgressIndicator(),
+                      );
+                    } else if (snapshot.hasError) {
+                      return Center(
+                        child: Text(
+                          'Error: ${snapshot.error}',
+                          style: GoogleFonts.poppins(
+                            color: Colors.red,
+                            fontSize: 16,
+                          ),
+                        ),
+                      );
+                    } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                      return Center(
+                        child: Text(
+                          'No comments yet :/',
+                          style: GoogleFonts.poppins(
+                            color: Colors.grey.shade700,
+                            fontSize: 16,
+                          ),
+                        ),
+                      );
+                    }
+
+                    final comments = snapshot.data!;
+                    return ListView.builder(
+                      itemCount: comments.length,
+                      itemBuilder: (context, index) {
+                        final comment = comments[index];
+                        return CommentTile(
+                          commentText: comment.comment,
+                          createdAt: comment.createdAt,
+                          likes: List<String>.from(
+                              comment.likes), // Fix dynamic cast
+                          onLike: () {
+                            // Handle like functionality
+                          },
+                          profileImageUrl: comment.profileImageUrl,
+                          username: comment.username,
+                        );
                       },
-                      child: Icon(
-                        CupertinoIcons.back,
-                        color: Colors.grey.shade700,
-                        size: 35,
-                      ),
-                    ),
-                    const SizedBox(width: 5),
-                    Text(
-                      "Comments",
-                      style: GoogleFonts.poppins(
-                        color: Colors.grey.shade800,
-                        fontSize: 22,
-                      ),
-                    ),
-                  ],
+                    );
+                  },
                 ),
-                const CommentTile(),
-                const SizedBox(height: 10),
-                showMessageField(context),
-              ],
-            ),
+              ),
+
+              // Message input field
+              showMessageField(context, postID, commentController, onSend),
+            ],
           ),
         ),
       );
@@ -398,4 +469,3 @@ void showReportDialog(BuildContext context) {
     },
   );
 }
-

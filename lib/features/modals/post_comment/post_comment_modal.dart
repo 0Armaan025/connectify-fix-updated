@@ -4,12 +4,14 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 
 class PostCommentModal {
+  final String commentID;
   final String username;
   final String profileImageUrl;
   final String createdAt;
   final List<String> likes;
   final String comment;
   PostCommentModal({
+    required this.commentID,
     required this.username,
     required this.profileImageUrl,
     required this.createdAt,
@@ -18,6 +20,7 @@ class PostCommentModal {
   });
 
   PostCommentModal copyWith({
+    String? commentID,
     String? username,
     String? profileImageUrl,
     String? createdAt,
@@ -25,6 +28,7 @@ class PostCommentModal {
     String? comment,
   }) {
     return PostCommentModal(
+      commentID: commentID ?? this.commentID,
       username: username ?? this.username,
       profileImageUrl: profileImageUrl ?? this.profileImageUrl,
       createdAt: createdAt ?? this.createdAt,
@@ -35,6 +39,7 @@ class PostCommentModal {
 
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
+      'commentID': commentID,
       'username': username,
       'profileImageUrl': profileImageUrl,
       'createdAt': createdAt,
@@ -45,10 +50,11 @@ class PostCommentModal {
 
   factory PostCommentModal.fromMap(Map<String, dynamic> map) {
     return PostCommentModal(
+      commentID: map['commentID'] as String,
       username: map['username'] as String,
       profileImageUrl: map['profileImageUrl'] as String,
       createdAt: map['createdAt'] as String,
-      likes: List<String>.from((map['likes'] as List<String>)),
+      likes: List<String>.from((map['likes'] ?? [])),
       comment: map['comment'] as String,
     );
   }
@@ -60,14 +66,15 @@ class PostCommentModal {
 
   @override
   String toString() {
-    return 'PostCommentModal(username: $username, profileImageUrl: $profileImageUrl, createdAt: $createdAt, likes: $likes, comment: $comment)';
+    return 'PostCommentModal(commentID: $commentID, username: $username, profileImageUrl: $profileImageUrl, createdAt: $createdAt, likes: $likes, comment: $comment)';
   }
 
   @override
   bool operator ==(covariant PostCommentModal other) {
     if (identical(this, other)) return true;
 
-    return other.username == username &&
+    return other.commentID == commentID &&
+        other.username == username &&
         other.profileImageUrl == profileImageUrl &&
         other.createdAt == createdAt &&
         listEquals(other.likes, likes) &&
@@ -76,7 +83,8 @@ class PostCommentModal {
 
   @override
   int get hashCode {
-    return username.hashCode ^
+    return commentID.hashCode ^
+        username.hashCode ^
         profileImageUrl.hashCode ^
         createdAt.hashCode ^
         likes.hashCode ^

@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math';
 import 'package:appwrite/appwrite.dart';
 import 'package:appwrite/models.dart' as models;
 import 'package:connectify/common/utils/normal_utils.dart';
@@ -85,6 +86,9 @@ class UserPostDatabaseRepository {
     for (models.Document post in posts.documents) {
       allPosts.add(PostModal.fromMap(post.data));
     }
+
+    
+    allPosts.shuffle(Random());
 
     return allPosts;
   }

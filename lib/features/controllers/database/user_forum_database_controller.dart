@@ -47,4 +47,17 @@ class UserForumDatabaseController {
       return null;
     }
   }
+
+  Future<String> upvoteForum(BuildContext context, String forumID) async {
+    UserForumDatabaseRepository _userForumDatabaseRepository =
+        UserForumDatabaseRepository();
+
+    try {
+      return await _userForumDatabaseRepository.upvoteForumPost(
+          context, forumID);
+    } catch (e) {
+      showSnackBar(context, 'caught issue here: ${e.toString()}');
+      return '';
+    }
+  }
 }

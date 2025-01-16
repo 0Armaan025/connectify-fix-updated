@@ -89,6 +89,7 @@ class _ThreadsViewState extends State<ThreadsView> {
                         final post = forumPosts[index];
                         return ForumPost(
                           uuid: post.uuid,
+                          
                           createdAt: post.createdAt,
                           forumContent: post.description,
                           forumID: post.forumID,

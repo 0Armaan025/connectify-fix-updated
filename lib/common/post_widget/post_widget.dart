@@ -2,6 +2,7 @@ import 'package:appwrite/appwrite.dart';
 import 'package:connectify/common/enlarged_image/enlarged_image_view.dart';
 import 'package:connectify/common/utils/normal_utils.dart';
 import 'package:connectify/common/utils/post_widget_utils.dart';
+import 'package:connectify/features/controllers/authentication/auth_controller.dart';
 import 'package:connectify/features/controllers/database/user_post_database_controller.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -65,6 +66,7 @@ class _PostWidgetState extends State<PostWidget> {
   bool isLoadingMedia = true;
   bool _isPlayIconVisible = false;
   bool _isPlaying = false;
+  bool haveILiked = false;
   String relativeTime = "";
 
   String BUCKET_ID = "";
@@ -80,7 +82,7 @@ class _PostWidgetState extends State<PostWidget> {
   void initState() {
     super.initState();
 
-    _likeCount = widget.likes.length; // Initialize with the correct count
+    _likeCount = widget.likes.length;
 
     _fileDownloader =
         FileDownloader(client); // Assuming client is already initialized
@@ -94,6 +96,30 @@ class _PostWidgetState extends State<PostWidget> {
     DateTime parsedDate = format.parse(widget.createdAt);
     DateTime now = DateTime.now();
     relativeTime = timeago.format(parsedDate, locale: 'en');
+    checkLiking();
+  }
+
+  checkLiking() async {
+    await checkLiked();
+  }
+
+  Future<void> checkLiked() async {
+    final likesList = widget.likes;
+    final user = await AuthController().getCurrentUser(context);
+    if (user != null) {
+      final userUUID = user.$id.toString();
+      if (likesList.contains(userUUID)) {
+        setState(() {
+          haveILiked = true;
+        });
+      } else {
+        setState(() {
+          haveILiked = false;
+        });
+      }
+    } else {
+      showSnackBar(context, 'Some problem ocurred, pwease msg armaan :((');
+    }
   }
 
   extractBucketAndFileId(String? url) {
@@ -613,8 +639,10 @@ class _PostWidgetState extends State<PostWidget> {
                   const SizedBox(width: 10),
                   LikeButton(
                     onTap: (bool isLiked) async {
+                      setState(() {
+                        haveILiked = !haveILiked;
+                      });
                       await likePost(context, widget.postID);
-                      return !isLiked;
                     },
                     countPostion: CountPostion.bottom,
                     size: 25,
@@ -624,10 +652,10 @@ class _PostWidgetState extends State<PostWidget> {
                       dotPrimaryColor: Color(0xff33b5e5),
                       dotSecondaryColor: Color(0xff0099cc),
                     ),
-                    likeBuilder: (isLiked) {
+                    likeBuilder: (myLiker) {
                       return Icon(
-                        !isLiked ? Icons.favorite : Icons.favorite_border,
-                        color: !isLiked ? Colors.red : Colors.grey,
+                        haveILiked ? Icons.favorite : Icons.favorite_border,
+                        color: haveILiked ? Colors.red : Colors.grey,
                         size: 30,
                       );
                     },

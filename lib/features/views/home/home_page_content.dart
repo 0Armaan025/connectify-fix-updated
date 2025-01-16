@@ -6,7 +6,7 @@ import 'package:connectify/features/controllers/database/user_profile_database_c
 import 'package:connectify/features/modals/post/post_modal.dart';
 import 'package:connectify/features/views/authentication/sign-up/sign_up_page.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
+import 'package:hive_flutter/hive_flutter.dart';
 
 class HomePageContent extends StatefulWidget {
   const HomePageContent({super.key});
@@ -21,100 +21,119 @@ class _HomePageContentState extends State<HomePageContent> {
   final UserProfileDatabaseController _userProfileController =
       UserProfileDatabaseController();
 
-  late Future<List<PostModal>> _postsFuture;
-  final Map<String, Future<Map<String, dynamic>>> _userDetailsCache = {};
+  late Future<void> _initializationFuture;
+  final ScrollController _scrollController = ScrollController();
+  List<PostModal> _posts = [];
+  int _currentPage = 1;
+  final int _limit = 10; // Number of posts per page
+  bool _isLoadingMore = false;
+  bool _hasMorePosts = true;
+  late Box<Map> _userCacheBox;
 
   @override
   void initState() {
     super.initState();
-    getMyPosts();
-    getFilesType(context);
-  }
+    _initializationFuture = _initializeHiveAndLoadPosts();
 
-  getMyPosts() async {
-    _postsFuture = _postController.getAllPosts(context).catchError((error) {
-      // Log the error for debugging
-      if (error.toString().contains("not authorized")) {
-        moveScreen(context, SignUpPage(), isPushReplacement: true);
+    // Add listener to load more posts when reaching the bottom
+    _scrollController.addListener(() {
+      if (_scrollController.position.pixels ==
+              _scrollController.position.maxScrollExtent &&
+          _hasMorePosts &&
+          !_isLoadingMore) {
+        _loadPosts(isLoadMore: true);
       }
-
-      // Return an empty list as a fallback
-      return <PostModal>[];
     });
   }
 
-  getFilesType(BuildContext context) async {
-    String type = await getFileType(
-        "https://cloud.appwrite.io/v1/storage/buckets/posts-00d/files/677a8b457986ba598174/preview?project=connectify-00d");
-    showSnackBar(context, type);
+  Future<void> _initializeHiveAndLoadPosts() async {
+    await Hive.initFlutter();
+    _userCacheBox = await Hive.openBox<Map>('user_cache');
+    await _loadPosts();
   }
 
-  Future<String> getFileType(String url) async {
+  Future<void> _loadPosts({bool isLoadMore = false}) async {
+    if (_isLoadingMore || (!_hasMorePosts && isLoadMore)) return;
+
+    setState(() {
+      _isLoadingMore = true;
+    });
+
     try {
-      final response = await http.head(Uri.parse(url));
-      if (response.statusCode == 200) {
-        final contentType = response.headers['content-type'];
-        if (contentType != null) {
-          if (contentType.startsWith('image/')) {
-            return 'Image';
-          } else if (contentType.startsWith('video/')) {
-            return 'Video';
-          } else {
-            return 'Unknown';
-          }
-        }
-      }
-      return 'Unable to determine file type';
-    } catch (e) {
-      print('Error checking file type: $e');
-      return 'Error';
-    }
-  }
+      final newPosts = await _postController.getAllPosts(context);
 
-  Future<Map<String, dynamic>> _getUserDetails(String uuid) {
-    // Cache user details to prevent duplicate network requests
-    if (!_userDetailsCache.containsKey(uuid)) {
-      _userDetailsCache[uuid] =
-          _userProfileController.getUserData(context, uuid).then((userDoc) {
-        return {
-          'username': userDoc.data['username'] ?? 'Unknown User',
-          'profileImageUrl': userDoc.data['profileImageUrl'] ?? '',
-        };
-      }).catchError((e) {
-        print('Error fetching user details: $e');
-        return {'username': 'Unknown User', 'profileImageUrl': ''};
+      if (newPosts.isEmpty) {
+        _hasMorePosts = false;
+      } else {
+        setState(() {
+          _posts.addAll(newPosts);
+          _currentPage++;
+        });
+      }
+    } catch (error) {
+      if (error.toString().contains("not authorized")) {
+        moveScreen(context, SignUpPage(), isPushReplacement: true);
+      } else {
+        print('Error loading posts: $error');
+      }
+    } finally {
+      setState(() {
+        _isLoadingMore = false;
       });
     }
-    return _userDetailsCache[uuid]!;
+  }
+
+  Future<Map<String, dynamic>> _getCachedUserDetails(String uuid) async {
+    if (_userCacheBox.containsKey(uuid)) {
+      return Map<String, dynamic>.from(_userCacheBox.get(uuid)!);
+    }
+
+    try {
+      final userDoc = await _userProfileController.getUserData(context, uuid);
+      final userDetails = {
+        'username': userDoc.data['username'] ?? 'Unknown User',
+        'profileImageUrl': userDoc.data['profileImageUrl'] ?? '',
+      };
+
+      await _userCacheBox.put(uuid, userDetails);
+      return userDetails;
+    } catch (e) {
+      print('Error fetching user details: $e');
+      return {'username': 'Unknown User', 'profileImageUrl': ''};
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        child: FutureBuilder<List<PostModal>>(
-          future: _postsFuture,
-          builder: (context, postSnapshot) {
-            if (postSnapshot.connectionState == ConnectionState.waiting) {
+        child: FutureBuilder<void>(
+          future: _initializationFuture,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(child: CircularProgressIndicator());
             }
 
-            if (postSnapshot.hasError) {
+            if (snapshot.hasError) {
               return const Center(
-                  child: Text('An error occurred while loading posts'));
+                  child: Text('An error occurred while loading the app'));
             }
 
-            final posts = postSnapshot.data!;
-            if (posts.isEmpty) {
+            if (_posts.isEmpty) {
               return const Center(child: Text('No posts available'));
             }
 
             return ListView.builder(
-              itemCount: posts.length,
+              controller: _scrollController,
+              itemCount: _posts.length + (_hasMorePosts ? 1 : 0),
               itemBuilder: (context, index) {
-                final post = posts[index];
+                if (index == _posts.length) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                final post = _posts[index];
                 return FutureBuilder<Map<String, dynamic>>(
-                  future: _getUserDetails(post.uuid),
+                  future: _getCachedUserDetails(post.uuid),
                   builder: (context, userDetailsSnapshot) {
                     if (userDetailsSnapshot.connectionState ==
                         ConnectionState.waiting) {
@@ -145,5 +164,12 @@ class _HomePageContentState extends State<HomePageContent> {
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    Hive.close();
+    super.dispose();
   }
 }

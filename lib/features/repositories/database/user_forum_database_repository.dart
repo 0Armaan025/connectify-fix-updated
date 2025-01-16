@@ -113,4 +113,73 @@ class UserForumDatabaseRepository {
       return null;
     }
   }
+
+  Future<String> upvoteForumPost(BuildContext context, String forumID) async {
+    final databases = Databases(client);
+
+    final user = await AuthController().getCurrentUser(context);
+
+    if (user != null) {
+      final userUUID = await user.$id;
+      final result = await databases.listDocuments(
+        databaseId: APPWRITE_DATABASE_ID,
+        collectionId: APPWRITE_FORUMS_COLLECTION_ID,
+        queries: [
+          Query.equal('forumID', forumID),
+        ],
+      );
+
+      if (result.documents.isNotEmpty) {
+        // Assuming postID is unique and there's only one matching document
+        final forumDoc = result.documents.first;
+
+        List<String> upvotes =
+            List<String>.from(forumDoc.data['upvotes'] ?? []);
+
+        if (upvotes.contains(userUUID)) {
+          // User has already liked the post, so remove the like
+          upvotes.remove(userUUID);
+          await databases.updateDocument(
+            databaseId: APPWRITE_DATABASE_ID,
+            collectionId: APPWRITE_POSTS_COLLECTION_ID,
+            documentId: forumDoc.$id,
+            data: {
+              'upvotes': upvotes,
+            },
+            permissions: [
+              Permission.update(Role.any()),
+              Permission.delete(Role.any()),
+              Permission.write(Role.any()),
+              Permission.read(Role.any()),
+            ],
+          );
+          return 'downvoted';
+        } else {
+          // User has not liked the post, so add the like
+          upvotes.add(userUUID);
+          await databases.updateDocument(
+            databaseId: APPWRITE_DATABASE_ID,
+            collectionId: APPWRITE_FORUMS_COLLECTION_ID,
+            documentId: forumDoc.$id,
+            data: {
+              'upvotes': upvotes,
+            },
+            permissions: [
+              Permission.update(Role.any()),
+              Permission.delete(Role.any()),
+              Permission.write(Role.any()),
+              Permission.read(Role.any()),
+            ],
+          );
+          return 'upvoted';
+        }
+      } else {
+        showSnackBar(
+            context, 'some error is coming, pwease contact armaan :((');
+
+        return 'error';
+      }
+    }
+    return 'error';
+  }
 }

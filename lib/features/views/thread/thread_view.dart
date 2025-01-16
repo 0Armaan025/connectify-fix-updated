@@ -5,24 +5,36 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class ThreadView extends StatefulWidget {
-  const ThreadView({super.key});
+  final String forumID;
+  final String username;
+  final String profileImageUrl;
+  final List<String> upvotes;
+  final String createdAt;
+  final String description;
+  final String mediaUrl;
+  const ThreadView(
+      {super.key,
+      required this.forumID,
+      required this.username,
+      required this.profileImageUrl,
+      required this.createdAt,
+      required this.mediaUrl,
+      required this.description,
+      required this.upvotes});
 
   @override
   State<ThreadView> createState() => _ThreadViewState();
 }
 
 class _ThreadViewState extends State<ThreadView> {
-  final String forumContent =
-      "How to create a forum post in Flutter and manage long texts effectively? This is an extended content version to check scrolling behavior when the word count exceeds the limit of 70 words. The goal is to make the UI user-friendly and visually appealing while keeping the main post accessible.";
-
   bool isExpanded = false;
 
   String _getTrimmedContent() {
-    final contentWords = forumContent.split(" ");
+    final contentWords = widget.description.split(" ");
     if (contentWords.length > 15 && !isExpanded) {
       return "${contentWords.sublist(0, 15).join(" ")}...";
     }
-    return forumContent;
+    return widget.description;
   }
 
   bool isContentScrollable = false;
@@ -43,7 +55,7 @@ class _ThreadViewState extends State<ThreadView> {
               width: double.infinity,
               alignment: Alignment.centerLeft,
               child: Text(
-                "FORUM ID: 348341324",
+                "FORUM ID: ${widget.forumID}",
                 style: GoogleFonts.poppins(
                   color: Colors.grey.shade700,
                 ),
@@ -58,15 +70,15 @@ class _ThreadViewState extends State<ThreadView> {
               children: [
                 Row(
                   children: [
-                    const CircleAvatar(
+                    CircleAvatar(
                       radius: 12,
                       backgroundImage: NetworkImage(
-                        'https://images.unsplash.com/photo-1498278854500-7c206daa073b?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8bW91bnRhaW58ZW58MHwxfDB8fHww',
+                        '${widget.profileImageUrl}',
                       ),
                     ),
                     const SizedBox(width: 10),
                     Text(
-                      "Armaan",
+                      "${widget.username}",
                       style: GoogleFonts.poppins(color: Colors.grey.shade700),
                     ),
                   ],
@@ -74,7 +86,7 @@ class _ThreadViewState extends State<ThreadView> {
                 Padding(
                   padding: const EdgeInsets.only(right: 10.0),
                   child: Text(
-                    "8 days ago",
+                    "${widget.createdAt}",
                     style: GoogleFonts.poppins(color: Colors.grey.shade700),
                   ),
                 ),
@@ -96,7 +108,7 @@ class _ThreadViewState extends State<ThreadView> {
                           fontWeight: FontWeight.w500,
                         ),
                       ),
-                      if (forumContent.split(" ").length > 40)
+                      if (widget.description.split(" ").length > 40)
                         GestureDetector(
                           onTap: () {
                             setState(() {
@@ -134,7 +146,7 @@ class _ThreadViewState extends State<ThreadView> {
                         height: 5,
                       ),
                       Text(
-                        "28k",
+                        "${widget.upvotes.length}",
                         style: TextStyle(color: Colors.grey.shade600),
                       ),
                     ],
@@ -319,7 +331,7 @@ class _ThreadViewState extends State<ThreadView> {
                 context: context,
                 builder: (context) {
                   return Container(
-                    height: MediaQuery.of(context).size.height * 0.28,
+                    height: MediaQuery.of(context).size.height * 0.22,
                     padding: const EdgeInsets.all(16),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -327,13 +339,6 @@ class _ThreadViewState extends State<ThreadView> {
                         ListTile(
                           leading: const Icon(Icons.image),
                           title: const Text("Image"),
-                          onTap: () {
-                            Navigator.pop(context);
-                          },
-                        ),
-                        ListTile(
-                          leading: const Icon(Icons.videocam),
-                          title: const Text("Video"),
                           onTap: () {
                             Navigator.pop(context);
                           },

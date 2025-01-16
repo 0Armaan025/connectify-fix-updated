@@ -4,6 +4,7 @@ import 'package:appwrite/appwrite.dart';
 import 'package:appwrite/models.dart' as models;
 import 'package:connectify/features/controllers/storage/user_forum_storage_controller.dart';
 import 'package:connectify/features/modals/forum/forum_modal.dart';
+import 'package:connectify/features/modals/forum_comment/forum_comment_modal.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -181,5 +182,143 @@ class UserForumDatabaseRepository {
       }
     }
     return 'error';
+  }
+
+  Future<void> addForumComment(BuildContext context, ForumCommentModal modal,
+      File? mediaFile, String forumID) async {
+    String previewURL = "";
+    if (mediaFile != null) {
+      UserForumStorageController _storageController =
+          UserForumStorageController();
+      previewURL =
+          await _storageController.saveUserProfileImage(context, mediaFile);
+
+      String forumCommentID = generateAlphanumericUID();
+
+      final user = await AuthController().getCurrentUser(context);
+      if (user != null) {
+        final newModal = modal.copyWith(
+          mediaUrl: previewURL,
+          uuid: user.$id.toString(),
+          forumCommentID: forumCommentID,
+          createdAt: DateTime.now().toString(),
+        );
+        await addComment(context, newModal, forumID);
+      } else {
+        showSnackBar(context, 'some error came, pls msg armaan, sorry!');
+      }
+    } else {
+      String forumCommentID = generateAlphanumericUID();
+
+      final user = await AuthController().getCurrentUser(context);
+
+      if (user != null) {
+        final newModal = modal.copyWith(
+          mediaUrl: previewURL,
+          forumCommentID: forumCommentID,
+          uuid: user.$id.toString(),
+          createdAt: DateTime.now().toString(),
+        );
+        await addComment(context, newModal, forumID);
+      } else {
+        showSnackBar(context, 'some error came, pls msg armaan, sorry!');
+      }
+    }
+  }
+
+  Future<void> addComment(
+      BuildContext context, ForumCommentModal modal, String forumID) async {
+    final databases = Databases(client);
+    final user = await AuthController().getCurrentUser(context);
+
+    if (user != null) {
+      try {
+        await databases
+            .createDocument(
+          databaseId: APPWRITE_DATABASE_ID,
+          collectionId: APPWRITE_FORUM_COMMENTS_COLLECTION_ID,
+          documentId: modal.forumCommentID,
+          data: modal.toMap(),
+        )
+            .then((value) async {
+          final forumCommentsHere = await databases.listDocuments(
+            databaseId: APPWRITE_DATABASE_ID,
+            collectionId: APPWRITE_FORUMS_COLLECTION_ID,
+            queries: [
+              Query.equal('forumID', forumID),
+            ],
+          );
+          if (forumCommentsHere.documents.isNotEmpty) {
+            // Assuming postID is unique and there's only one matching document
+            final forumDoc = forumCommentsHere.documents.first;
+
+            List<String> coolComments =
+                List<String>.from(forumDoc.data['forumComments'] ?? []);
+
+            coolComments.add(modal.forumCommentID);
+            await databases.updateDocument(
+              databaseId: APPWRITE_DATABASE_ID,
+              collectionId: APPWRITE_POSTS_COLLECTION_ID,
+              documentId: forumDoc.$id,
+              data: {
+                'forumComments': coolComments,
+              },
+              permissions: [
+                Permission.update(Role.any()),
+                Permission.delete(Role.any()),
+                Permission.write(Role.any()),
+                Permission.read(Role.any()),
+              ],
+            );
+          }
+        });
+      } catch (e) {
+        showSnackBar(
+            context, 'some error came, pls msg armaan, sorry! ${e.toString()}');
+      }
+    }
+  }
+
+  Future<List<ForumCommentModal>> fetchForumComments(
+      BuildContext context, String forumID) async {
+    List<ForumCommentModal> forumComments = [];
+    final databases = Databases(client);
+
+    try {
+      final forumDoc = await databases.listDocuments(
+        databaseId: APPWRITE_DATABASE_ID,
+        collectionId: APPWRITE_FORUMS_COLLECTION_ID,
+        queries: [
+          Query.equal('forumID', forumID),
+        ],
+      );
+
+      if (forumDoc.documents.isNotEmpty) {
+        // Assuming postID is unique and there's only one matching document
+        final forumDocHere = forumDoc.documents.first;
+
+        List<String> comments =
+            List<String>.from(forumDocHere.data['comments'] ?? []);
+
+        List<ForumCommentModal> realComments = [];
+
+        for (String commentID in comments) {
+          final commentDoc = await databases.getDocument(
+            databaseId: APPWRITE_DATABASE_ID,
+            collectionId: APPWRITE_FORUM_COMMENTS_COLLECTION_ID,
+            documentId: commentID,
+          );
+
+          realComments.add(ForumCommentModal.fromMap(commentDoc.data));
+        }
+
+        forumComments = realComments;
+      }
+    } catch (e) {
+      // Handle exceptions
+      print('Error fetching forum comments: $e');
+    }
+
+    return forumComments;
   }
 }

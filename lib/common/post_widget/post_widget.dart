@@ -186,6 +186,7 @@ class _PostWidgetState extends State<PostWidget> {
             });
 
           _videoController!.play();
+          _videoController!.setVolume(0);
         } else {
           // Handle image case if needed
           isLoadingMedia = false;

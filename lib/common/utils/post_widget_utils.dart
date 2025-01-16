@@ -11,16 +11,17 @@ import 'normal_utils.dart';
 showMessageField(BuildContext context, String postID,
     TextEditingController commentController, VoidCallback onSend) {
   final size = MediaQuery.of(context).size;
+  bool isSendingComment = false; // Add this in the state
 
   return Column(
     children: [
+      // Empty space
       SizedBox(
           // height: size.height * 0.16,
           ),
       Row(
         children: [
           const SizedBox(width: 8),
-
           // Expanded TextFormField
           Expanded(
             child: Container(
@@ -40,7 +41,11 @@ showMessageField(BuildContext context, String postID,
                 keyboardType: TextInputType.text,
                 textInputAction: TextInputAction.send,
                 onFieldSubmitted: (value) {
-                  print("Comment submitted: $value");
+                  isSendingComment = true;
+
+                  onSend(); // Trigger the send action
+                  returnComments(context, postID);
+                  isSendingComment = false;
                 },
               ),
             ),
@@ -52,12 +57,16 @@ showMessageField(BuildContext context, String postID,
             backgroundColor: Colors.green,
             child: IconButton(
               icon: const Icon(Icons.send, color: Colors.white),
-              onPressed: onSend,
+              onPressed: () {
+                onSend();
+              },
             ),
           ),
           const SizedBox(width: 8),
         ],
-      )
+      ),
+      if (isSendingComment) // Show loading if sending comment
+        const LinearProgressIndicator(),
     ],
   );
 }

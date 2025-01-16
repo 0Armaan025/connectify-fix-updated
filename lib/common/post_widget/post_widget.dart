@@ -56,6 +56,7 @@ class _PostWidgetState extends State<PostWidget> {
   bool _isFollowed = false;
   bool _isUserPaused = false;
   bool _isVideoVisible = false;
+  
 
   int? _likeCount;
 

@@ -13,6 +13,8 @@ class ThreadsView extends StatefulWidget {
 
 class _ThreadsViewState extends State<ThreadsView> {
   late Future<List<ForumModal>> forumPostsFuture;
+  final TextEditingController _searchController = TextEditingController();
+  ForumModal? _specificPostByID; // Stores a single post for search results
 
   @override
   void initState() {
@@ -22,7 +24,24 @@ class _ThreadsViewState extends State<ThreadsView> {
 
   @override
   void dispose() {
+    _searchController.dispose();
     super.dispose();
+  }
+
+  Future<void> searchForumPostByID(BuildContext context) async {
+    final searchQuery = _searchController.text.trim();
+    if (searchQuery.isEmpty) {
+      setState(() {
+        _specificPostByID = null; // Clear specific post if search is empty
+      });
+      return;
+    }
+
+    final forumPost = await UserForumDatabaseController()
+        .fetchForumPostByID(context, searchQuery);
+    setState(() {
+      _specificPostByID = forumPost; // Update with the found post or null
+    });
   }
 
   @override
@@ -46,61 +65,85 @@ class _ThreadsViewState extends State<ThreadsView> {
             // Search Bar
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 18.0),
-              child: TextField(
-                decoration: InputDecoration(
-                  hintText: "Search threads (private no./title)",
-                  hintStyle: GoogleFonts.poppins(
-                    color: Colors.grey.shade600,
-                    fontSize: 16,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _searchController,
+                      decoration: InputDecoration(
+                        hintText: "Search threads by ID",
+                        hintStyle: GoogleFonts.poppins(
+                          color: Colors.grey.shade600,
+                          fontSize: 16,
+                        ),
+                        prefixIcon:
+                            const Icon(Icons.search, color: Colors.grey),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                        filled: true,
+                        fillColor: Colors.white,
+                        contentPadding: const EdgeInsets.symmetric(
+                            vertical: 14, horizontal: 16),
+                      ),
+                    ),
                   ),
-                  prefixIcon: const Icon(Icons.search, color: Colors.grey),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
+                  const SizedBox(width: 10),
+                  ElevatedButton(
+                    onPressed: () => searchForumPostByID(context),
+                    child: const Text("Search"),
                   ),
-                  filled: true,
-                  fillColor: Colors.white,
-                  contentPadding:
-                      const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
-                ),
-                onChanged: (value) {
-                  print("Search text: $value");
-                },
+                ],
               ),
             ),
             const SizedBox(height: 15),
-            // Forum Posts List
+            // Forum Posts List or Search Result
             Expanded(
-              child: FutureBuilder<List<ForumModal>>(
-                future: forumPostsFuture,
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
-                  } else if (snapshot.hasError) {
-                    return Center(child: Text('Error: ${snapshot.error}'));
-                  } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                    return const Center(
-                        child: Text('No forum posts available.'));
-                  } else {
-                    final forumPosts = snapshot.data!;
-                    return ListView.builder(
-                      itemCount: forumPosts.length,
-                      itemBuilder: (context, index) {
-                        final post = forumPosts[index];
-                        return ForumPost(
-                          uuid: post.uuid,
-                          
-                          createdAt: post.createdAt,
-                          forumContent: post.description,
-                          forumID: post.forumID,
-                          mediaUrl: post.mediaUrl,
-                          upvotes: post.upvotes,
-                        );
+              child: _specificPostByID != null
+                  ? Center(
+                      child: ForumPost(
+                        uuid: _specificPostByID!.uuid,
+                        createdAt: _specificPostByID!.createdAt,
+                        forumContent: _specificPostByID!.description,
+                        forumID: _specificPostByID!.forumID,
+                        mediaUrl: _specificPostByID!.mediaUrl,
+                        upvotes: _specificPostByID!.upvotes,
+                      ),
+                    )
+                  : FutureBuilder<List<ForumModal>>(
+                      future: forumPostsFuture,
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return const Center(
+                              child: CircularProgressIndicator());
+                        } else if (snapshot.hasError) {
+                          return Center(
+                              child: Text('Error: ${snapshot.error}'));
+                        } else if (!snapshot.hasData ||
+                            snapshot.data!.isEmpty) {
+                          return const Center(
+                              child: Text('No forum posts available.'));
+                        } else {
+                          final forumPosts = snapshot.data!;
+                          return ListView.builder(
+                            itemCount: forumPosts.length,
+                            itemBuilder: (context, index) {
+                              final post = forumPosts[index];
+                              return ForumPost(
+                                uuid: post.uuid,
+                                createdAt: post.createdAt,
+                                forumContent: post.description,
+                                forumID: post.forumID,
+                                mediaUrl: post.mediaUrl,
+                                upvotes: post.upvotes,
+                              );
+                            },
+                          );
+                        }
                       },
-                    );
-                  }
-                },
-              ),
+                    ),
             ),
           ],
         ),

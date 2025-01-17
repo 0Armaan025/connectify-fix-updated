@@ -107,7 +107,8 @@ class UserForumDatabaseRepository {
         documentId: forumID,
       );
 
-      return ForumModal.fromMap(document.data);
+      final myData = ForumModal.fromMap(document.data);
+      return myData;
     } catch (e) {
       // Handle exceptions, e.g., document not found
       print('Error fetching forum post by ID: $e');

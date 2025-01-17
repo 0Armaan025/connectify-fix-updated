@@ -69,7 +69,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
                 subtitle: Text("Armaan says to click here and know more!!!"),
                 trailing: const Icon(Icons.arrow_forward_ios),
                 onTap: () {
-                  // Navigate to Profile Editing Screen
+                  
                 },
               ),
 

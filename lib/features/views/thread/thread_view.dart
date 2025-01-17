@@ -1,10 +1,13 @@
 import 'package:connectify/common/attatchment_tile/attatchment_tile.dart';
 import 'package:connectify/common/utils/normal_utils.dart';
+import 'package:connectify/features/controllers/authentication/auth_controller.dart';
 import 'package:connectify/features/controllers/database/user_forum_database_controller.dart';
 import 'package:connectify/features/modals/forum_comment/forum_comment_modal.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+
+import '../../controllers/database/user_profile_database_controller.dart';
 
 class ThreadView extends StatefulWidget {
   final String forumID;
@@ -41,6 +44,9 @@ class _ThreadViewState extends State<ThreadView> {
 
   bool isContentScrollable = false;
   List<ForumCommentModal> _comments = [];
+  bool _hasUpvoted = false;
+  String _username = "";
+  String _profileImageUrl = "";
   bool isLoading = true; // Loading state for comments
 
   final TextEditingController _commentController = TextEditingController();
@@ -167,7 +173,11 @@ class _ThreadViewState extends State<ThreadView> {
                 mainAxisAlignment: MainAxisAlignment.start,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  widget.mediaUrl != '' ? AttatchmentTile() : Container(),
+                  widget.mediaUrl.isNotEmpty
+                      ? AttatchmentTile(
+                          url: widget.mediaUrl,
+                        )
+                      : Container(),
                 ],
               ),
             ),
@@ -210,10 +220,10 @@ class _ThreadViewState extends State<ThreadView> {
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const CircleAvatar(
+                          CircleAvatar(
                             radius: 12,
                             backgroundImage: NetworkImage(
-                              'https://images.unsplash.com/photo-1511367461989-f85a21fda167?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NXx8cGVyc29ufGVufDB8fDB8fHww',
+                              '${_profileImageUrl}',
                             ),
                           ),
                           const SizedBox(width: 10),
@@ -222,7 +232,7 @@ class _ThreadViewState extends State<ThreadView> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  comment.uuid, // Use your model's properties
+                                  _username, // Use your model's properties
                                   style: GoogleFonts.poppins(
                                     color: Colors.grey.shade700,
                                     fontWeight: FontWeight.bold,
@@ -263,20 +273,6 @@ class _ThreadViewState extends State<ThreadView> {
                       ),
                       const SizedBox(height: 8),
                       // Optional: Attachments Section
-                      if (comment.mediaUrl != null &&
-                          comment.mediaUrl!.isNotEmpty)
-                        SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              comment.mediaUrl != ''
-                                  ? AttatchmentTile()
-                                  : Container(),
-                            ],
-                          ),
-                        ),
                     ],
                   ),
                 ),
@@ -308,39 +304,6 @@ class _ThreadViewState extends State<ThreadView> {
             ),
           ),
           const SizedBox(width: 10),
-          IconButton(
-            icon: const Icon(Icons.attach_file),
-            onPressed: () {
-              showModalBottomSheet(
-                context: context,
-                builder: (context) {
-                  return Container(
-                    height: MediaQuery.of(context).size.height * 0.22,
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        ListTile(
-                          leading: const Icon(Icons.image),
-                          title: const Text("Image"),
-                          onTap: () {
-                            Navigator.pop(context);
-                          },
-                        ),
-                        ListTile(
-                          leading: const Icon(Icons.cancel),
-                          title: const Text("Cancel"),
-                          onTap: () {
-                            Navigator.pop(context);
-                          },
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              );
-            },
-          ),
           IconButton(
             icon: const Icon(Icons.send, color: Colors.blue),
             onPressed: () async {
@@ -387,6 +350,7 @@ class _ThreadViewState extends State<ThreadView> {
   }
 
   Future<void> getCommentsHere() async {
+    await getUserDataToo();
     UserForumDatabaseController _controller = UserForumDatabaseController();
     final comments =
         await _controller.fetchForumComments(context, widget.forumID);
@@ -395,6 +359,24 @@ class _ThreadViewState extends State<ThreadView> {
       _comments = comments;
       isLoading = false;
     });
+  }
+
+  Future<void> getUserDataToo() async {
+    final user = await AuthController().getCurrentUser(context);
+    if (user != null) {
+      final userUUID = user.$id;
+      UserProfileDatabaseController _controller =
+          UserProfileDatabaseController();
+      final userModal = await _controller.getUserData(context, userUUID);
+      _username = userModal.data['username'];
+      _profileImageUrl = userModal.data['profileImageUrl'];
+
+      _hasUpvoted = widget.upvotes.contains(userUUID);
+
+      setState(() {});
+    } else {
+      showSnackBar(context, 'some error is coming, pwease contact armaan :((');
+    }
   }
 
   @override

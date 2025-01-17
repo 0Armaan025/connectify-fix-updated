@@ -83,4 +83,13 @@ class UserForumDatabaseController {
     return await _userForumDatabaseRepository.fetchForumComments(
         context, forumID);
   }
+
+  Future<ForumModal?> fetchForumPostByID(
+      BuildContext context, String forumID) async {
+    UserForumDatabaseRepository _userForumDatabaseRepository =
+        UserForumDatabaseRepository();
+
+    return await _userForumDatabaseRepository.fetchForumPostById(
+        context, forumID);
+  }
 }

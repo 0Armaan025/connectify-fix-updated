@@ -97,6 +97,13 @@ class _KnowMorePageState extends State<KnowMorePage> {
                 ),
               ),
               Container(
+                margin: const EdgeInsets.only(left: 8, right: 12, top: 8),
+                child: Text(
+                  "I permit all types of hacking attacks/anything you'd like to do, but pls don't do anything illegal, and if you find any vulnerability, do let me know, I'll fix it asap!, you are also free to copy code from https://github.com/0Armaan025/connectify-fix-updated",
+                  style: GoogleFonts.poppins(color: Colors.black, fontSize: 14),
+                ),
+              ),
+              Container(
                 margin: const EdgeInsets.only(top: 8),
                 width: double.infinity,
                 height: MediaQuery.of(context).size.height * 0.4,

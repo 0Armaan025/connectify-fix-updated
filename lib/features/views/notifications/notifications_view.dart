@@ -6,6 +6,13 @@ class NotificationsPage extends StatelessWidget {
     {
       "type": "like",
       "user": "Armaan",
+      "message":
+          "sample msg, just letting you know this is fake, this was demo data, it doesn't work, coz of appwrite issues for now",
+      "time": "5 min ago",
+    },
+    {
+      "type": "like",
+      "user": "Armaan",
       "message": "liked your post",
       "time": "5 min ago",
     },

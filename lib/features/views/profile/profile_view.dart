@@ -127,7 +127,7 @@ class _ProfileViewState extends State<ProfileView> {
                           ),
                           const SizedBox(height: 3),
                           Text(
-                            "\" Lorem reprehenderit adipisicing adipisicing elit pariatur labore Lorem irure aliquip. Consectetur nulla ea minim esse voluptate reprehenderit in laborum adipisicing minim elit dolore. Qui incididunt commodo dolor ipsum. Ut adipisicing eiusmod non occaecat tempor laboris irure. \" ",
+                            "\"Yo! this doesn't work, sorry! also click on the edit icon(pencil) and you can see me saying random stuff (sorry for that tho) in the second option,  Lorem reprehenderit adipisicing adipisicing elit pariatur labore Lorem irure aliquip. Consectetur nulla ea minim esse voluptate reprehenderit in laborum adipisicing minim elit dolore. Qui incididunt commodo dolor ipsum. Ut adipisicing eiusmod non occaecat tempor laboris irure. \" ",
                             style: GoogleFonts.poppins(
                               fontSize: 14,
                               color: Colors.grey[800],

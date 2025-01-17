@@ -35,12 +35,13 @@ class _ChatViewState extends State<ChatView> {
       {
         "type": "sender",
         "name": "Armaan",
-        "message": "Hi there Arnav, how are you? https://connectify.com",
+        "message":
+            "Hi there Random name, how are you? https://delsgade.vercel.app trying, also hold the clip icon which is on the right of the send btn for like 3-4 secs, there's an easter egg!",
         "time": "22:03 PM IST",
       },
       {
         "type": "receiver",
-        "name": "Arnav",
+        "name": "Random name",
         "message":
             "Hi there Armaan, I'm cool, wbu? https://google.com Amet sunt laborum est ut. Incididunt exercitation commodo ad esse anim anim qui enim. Qui est voluptate ullamco non esse irure consectetur laboris non amet velit est veniam. Lorem dolor ad occaecat veniam eu sint.",
         "time": "22:03 PM IST",
@@ -205,7 +206,7 @@ class _ChatViewState extends State<ChatView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: buildChatAppBar(context, 'Arnav', 'Online', () {
+      appBar: buildChatAppBar(context, 'cool_man', 'Online', () {
         _showContextMenu(context);
       }),
       body: GestureDetector(
@@ -232,7 +233,8 @@ class _ChatViewState extends State<ChatView> {
                           // videoUrl:
                           //     'https://www.sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4',
                           message: message['message']!,
-                          senderImage: '',
+                          senderImage:
+                              'https://cdn-icons-png.flaticon.com/128/3135/3135715.png',
                           time: message['time']!,
                         );
                       } else {
@@ -241,7 +243,8 @@ class _ChatViewState extends State<ChatView> {
                           //     'https://www.sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4',
                           senderName: message['name']!,
                           message: message['message']!,
-                          senderImage: '',
+                          senderImage:
+                              'https://cdn-icons-png.flaticon.com/128/3135/3135715.png',
                           time: message['time']!,
                         );
                       }

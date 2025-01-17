@@ -1,4 +1,5 @@
 import 'package:connectify/common/utils/normal_utils.dart';
+import 'package:connectify/features/views/know_more/know_more_page.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -69,7 +70,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
                 subtitle: Text("Armaan says to click here and know more!!!"),
                 trailing: const Icon(Icons.arrow_forward_ios),
                 onTap: () {
-                  
+                  moveScreen(context, KnowMorePage());
                 },
               ),
 

@@ -4,7 +4,9 @@ import 'package:appwrite/models.dart';
 import 'package:connectify/common/utils/normal_utils.dart';
 import 'package:connectify/constants/appwrite_constants.dart';
 import 'package:connectify/constants/normal_constants.dart';
+import 'package:connectify/features/controllers/database/user_profile_database_controller.dart';
 import 'package:connectify/features/views/authentication/sign-up/sign_up_page.dart';
+import 'package:connectify/features/views/home/home_view.dart';
 import 'package:connectify/features/views/profile_set_up/profile_set_up_page.dart';
 import 'package:connectify/features/views/user_blocked/user_blocked_page.dart';
 import 'package:flutter/material.dart';
@@ -60,12 +62,28 @@ class AuthRepository {
       provider: OAuthProvider.google,
     )
         .then((_) {
-      moveScreen(context, ProfileSetUpPage(), isPushReplacement: true);
+      final user = account.get().then((value) {
+        UserProfileDatabaseController controller =
+            UserProfileDatabaseController();
+        final userData = controller.getUserData(context, value.$id);
+
+        if (userData != null) {
+          moveScreen(context, HomePage(), isPushReplacement: true);
+        }
+        moveScreen(context, ProfileSetUpPage(), isPushReplacement: true);
+      });
     }).onError((error, stackTrace) {
       showSnackBar(context,
           "Some error ocurred, report it to Armaan kudasai (please) :D, error: ${error}");
     });
     final user = account.get().then((value) {
+      UserProfileDatabaseController controller =
+          UserProfileDatabaseController();
+      final userData = controller.getUserData(context, value.$id);
+
+      if (userData != null) {
+        moveScreen(context, HomePage(), isPushReplacement: true);
+      }
       moveScreen(context, ProfileSetUpPage(), isPushReplacement: true);
     });
 

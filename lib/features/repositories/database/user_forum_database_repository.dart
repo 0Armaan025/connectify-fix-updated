@@ -258,7 +258,7 @@ class UserForumDatabaseRepository {
             coolComments.add(modal.forumCommentID);
             await databases.updateDocument(
               databaseId: APPWRITE_DATABASE_ID,
-              collectionId: APPWRITE_POSTS_COLLECTION_ID,
+              collectionId: APPWRITE_FORUMS_COLLECTION_ID,
               documentId: forumDoc.$id,
               data: {
                 'forumComments': coolComments,
@@ -294,29 +294,40 @@ class UserForumDatabaseRepository {
       );
 
       if (forumDoc.documents.isNotEmpty) {
-        // Assuming postID is unique and there's only one matching document
         final forumDocHere = forumDoc.documents.first;
 
+        // Safely get the forumComments list, defaulting to an empty list
         List<String> comments =
-            List<String>.from(forumDocHere.data['comments'] ?? []);
+            List<String>.from(forumDocHere.data['forumComments'] ?? []);
 
         List<ForumCommentModal> realComments = [];
 
         for (String commentID in comments) {
-          final commentDoc = await databases.getDocument(
-            databaseId: APPWRITE_DATABASE_ID,
-            collectionId: APPWRITE_FORUM_COMMENTS_COLLECTION_ID,
-            documentId: commentID,
-          );
+          try {
+            // Fetch comment document and handle potential null data
+            final commentDoc = await databases.getDocument(
+              databaseId: APPWRITE_DATABASE_ID,
+              collectionId: APPWRITE_FORUM_COMMENTS_COLLECTION_ID,
+              documentId: commentID,
+            );
 
-          realComments.add(ForumCommentModal.fromMap(commentDoc.data));
+            if (commentDoc.data != null) {
+              realComments.add(ForumCommentModal.fromMap(commentDoc.data));
+            } else {
+              print('Comment data is null for commentID: $commentID');
+            }
+          } catch (e) {
+            print('Error fetching comment with ID $commentID: $e');
+          }
         }
 
         forumComments = realComments;
+        print('Fetched comments: $realComments');
+      } else {
+        print('No forum documents found for forumID: $forumID');
       }
-    } catch (e) {
-      // Handle exceptions
-      print('Error fetching forum comments: $e');
+    } catch (e, stacktrace) {
+      print('Error fetching forum comments: $e $stacktrace');
     }
 
     return forumComments;

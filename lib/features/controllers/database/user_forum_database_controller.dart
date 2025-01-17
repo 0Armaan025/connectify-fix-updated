@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:connectify/common/utils/normal_utils.dart';
 import 'package:connectify/features/modals/forum/forum_modal.dart';
+import 'package:connectify/features/modals/forum_comment/forum_comment_modal.dart';
 import 'package:connectify/features/repositories/database/user_forum_database_repository.dart';
 import 'package:flutter/material.dart';
 
@@ -59,5 +60,27 @@ class UserForumDatabaseController {
       showSnackBar(context, 'caught issue here: ${e.toString()}');
       return '';
     }
+  }
+
+  Future<void> addForumComment(BuildContext context, ForumCommentModal modal,
+      String forumID, File? mediaFile) async {
+    UserForumDatabaseRepository _userForumDatabaseRepository =
+        UserForumDatabaseRepository();
+
+    try {
+      await _userForumDatabaseRepository.addForumComment(
+          context, modal, mediaFile, forumID);
+    } catch (e) {
+      showSnackBar(context, 'caught issue here: ${e.toString()}');
+    }
+  }
+
+  Future<List<ForumCommentModal>> fetchForumComments(
+      BuildContext context, String forumID) async {
+    UserForumDatabaseRepository _userForumDatabaseRepository =
+        UserForumDatabaseRepository();
+
+    return await _userForumDatabaseRepository.fetchForumComments(
+        context, forumID);
   }
 }

@@ -55,7 +55,7 @@ class ForumCommentModal {
       uuid: map['uuid'] as String,
       mediaUrl: map['mediaUrl'] as String,
       commentContent: map['commentContent'] as String,
-      upvotes: List<String>.from((map['upvotes'] as List<String>)),
+      upvotes: List<String>.from((map['upvotes'] ?? [])),
       createdAt: map['createdAt'] as String,
     );
   }

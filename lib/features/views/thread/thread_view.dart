@@ -1,5 +1,7 @@
 import 'package:connectify/common/attatchment_tile/attatchment_tile.dart';
 import 'package:connectify/common/utils/normal_utils.dart';
+import 'package:connectify/features/controllers/database/user_forum_database_controller.dart';
+import 'package:connectify/features/modals/forum_comment/forum_comment_modal.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -38,6 +40,10 @@ class _ThreadViewState extends State<ThreadView> {
   }
 
   bool isContentScrollable = false;
+  List<ForumCommentModal> _comments = [];
+  bool isLoading = true; // Loading state for comments
+
+  final TextEditingController _commentController = TextEditingController();
 
   Widget _buildPostUserSection(BuildContext context) {
     return Container(
@@ -155,15 +161,13 @@ class _ThreadViewState extends State<ThreadView> {
               ],
             ),
             const SizedBox(height: 5),
-            const SingleChildScrollView(
+            SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.start,
-                crossAxisAlignment: CrossAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  AttatchmentTile(),
-                  AttatchmentTile(),
-                  AttatchmentTile(),
+                  widget.mediaUrl != '' ? AttatchmentTile() : Container(),
                 ],
               ),
             ),
@@ -173,135 +177,114 @@ class _ThreadViewState extends State<ThreadView> {
     );
   }
 
-  _buildCommentsSection() {
-    return ListView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: 5,
-      itemBuilder: (context, index) {
-        return GestureDetector(
-          onLongPress: () {
-            void showOptionsDialog(BuildContext context) {
-              showDialog(
-                context: context,
-                builder: (BuildContext context) {
-                  return AlertDialog(
-                    content: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        ListTile(
-                          leading: const Icon(Icons.report),
-                          title: const Text("Report Comment"),
-                          onTap: () {
-                            // Add logic to report the comment
-                            Navigator.pop(context);
-                          },
-                        ),
-                        ListTile(
-                          leading: const Icon(Icons.person),
-                          title: const Text("View Profile"),
-                          onTap: () {
-                            // Add logic to view the profile
-                            Navigator.pop(context);
-                          },
-                        ),
-                        ListTile(
-                          leading: const Icon(Icons.delete),
-                          title: const Text("Delete Comment"),
-                          onTap: () {
-                            // Add logic to delete the comment
-                            Navigator.pop(context);
-                          },
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              );
-            }
+  Widget _buildCommentsSection() {
+    if (_comments.isEmpty) {
+      return const Center(child: Text("No comments available.")); // No comments
+    }
 
-            showOptionsDialog(context);
-          },
-          child: Container(
-            margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade100,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const CircleAvatar(
-                      radius: 12,
-                      backgroundImage: NetworkImage(
-                        'https://images.unsplash.com/photo-1511367461989-f85a21fda167?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NXx8cGVyc29ufGVufDB8fDB8fHww',
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Column(
+    return Container(
+      width: 200,
+      child: Column(
+        children: [
+          ListView.builder(
+            shrinkWrap: true,
+            physics:
+                const NeverScrollableScrollPhysics(), // Prevents scrolling; let parent scroll
+            itemCount: _comments.length,
+            itemBuilder: (context, index) {
+              final comment = _comments[index];
+
+              return GestureDetector(
+                onLongPress: () {},
+                child: Container(
+                  margin:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade100,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            "User ${index + 1}",
-                            style: GoogleFonts.poppins(
-                              color: Colors.grey.shade700,
-                              fontWeight: FontWeight.bold,
+                          const CircleAvatar(
+                            radius: 12,
+                            backgroundImage: NetworkImage(
+                              'https://images.unsplash.com/photo-1511367461989-f85a21fda167?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NXx8cGVyc29ufGVufDB8fDB8fHww',
                             ),
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            "This is comment ${index + 1} content. It's detailed and includes thoughtful insights.",
-                            style: GoogleFonts.poppins(
-                                color: Colors.grey.shade600),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  comment.uuid, // Use your model's properties
+                                  style: GoogleFonts.poppins(
+                                    color: Colors.grey.shade700,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  comment
+                                      .commentContent, // Comment content from the model
+                                  style: GoogleFonts.poppins(
+                                      color: Colors.grey.shade600),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Column(
+                            children: [
+                              CircleAvatar(
+                                backgroundColor: Colors.transparent,
+                                radius: 20,
+                                child: GestureDetector(
+                                  onTap: () {}, // Implement like action
+                                  child: const Icon(
+                                    CupertinoIcons.hand_thumbsup,
+                                    color: Colors.black,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 5),
+                              Text(
+                                "${comment.upvotes.length ?? 0}", // Likes count
+                                style: TextStyle(color: Colors.grey.shade600),
+                              ),
+                            ],
                           ),
                         ],
                       ),
-                    ),
-                    const SizedBox(width: 10),
-                    Column(
-                      children: [
-                        CircleAvatar(
-                          backgroundColor: Colors.transparent,
-                          radius: 20,
-                          child: GestureDetector(
-                            onTap: () {},
-                            child: const Icon(
-                              CupertinoIcons.hand_thumbsup,
-                              color: Colors.black,
-                            ),
+                      const SizedBox(height: 8),
+                      // Optional: Attachments Section
+                      if (comment.mediaUrl != null &&
+                          comment.mediaUrl!.isNotEmpty)
+                        SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              comment.mediaUrl != ''
+                                  ? AttatchmentTile()
+                                  : Container(),
+                            ],
                           ),
                         ),
-                        const SizedBox(height: 5),
-                        Text(
-                          "${index * 10}",
-                          style: TextStyle(color: Colors.grey.shade600),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                // Attachments Section
-                const SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: [
-                      AttatchmentTile(),
-                      AttatchmentTile(),
-                      AttatchmentTile(),
                     ],
                   ),
                 ),
-              ],
-            ),
+              );
+            },
           ),
-        );
-      },
+        ],
+      ),
     );
   }
 
@@ -312,6 +295,7 @@ class _ThreadViewState extends State<ThreadView> {
         children: [
           Expanded(
             child: TextField(
+              controller: _commentController,
               decoration: InputDecoration(
                 hintText: "Leave a comment...",
                 border: OutlineInputBorder(
@@ -359,11 +343,58 @@ class _ThreadViewState extends State<ThreadView> {
           ),
           IconButton(
             icon: const Icon(Icons.send, color: Colors.blue),
-            onPressed: () {},
+            onPressed: () async {
+              await addForumComment(context);
+            },
           ),
         ],
       ),
     );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    getComments();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _commentController.dispose();
+  }
+
+  Future<void> addForumComment(BuildContext context) async {
+    UserForumDatabaseController _controller = UserForumDatabaseController();
+    final modal = ForumCommentModal(
+      uuid: '',
+      forumCommentID: '',
+      commentContent: _commentController.text.toString(),
+      mediaUrl: '',
+      upvotes: [],
+      createdAt: '',
+    );
+    try {
+      await _controller.addForumComment(context, modal, widget.forumID, null);
+      getComments();
+    } catch (e) {
+      showSnackBar(context, 'caught issue here: ${e.toString()}');
+    }
+  }
+
+  getComments() async {
+    await getCommentsHere();
+  }
+
+  Future<void> getCommentsHere() async {
+    UserForumDatabaseController _controller = UserForumDatabaseController();
+    final comments =
+        await _controller.fetchForumComments(context, widget.forumID);
+
+    setState(() {
+      _comments = comments;
+      isLoading = false;
+    });
   }
 
   @override

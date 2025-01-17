@@ -1,18 +1,15 @@
-# connectify
+# Connectify
+![connectify logo maybe](https://github.com/user-attachments/assets/874400b3-7f2f-4d5a-82ce-929f2541ac45)
+![New Project (5)](https://github.com/user-attachments/assets/26e7580f-eda4-48ac-9c49-f0d0daa23e41)
+![New Project (6)](https://github.com/user-attachments/assets/f48aad19-b440-4a2b-87d4-5cbdfa77e969)
+## A social networking app made using Flutter
+### Features that it has:
+- 🌏 Post sharing feature (Image/Video)
+- 🗨️ Comments for posts
+- 👍 likes for posts
+- 💭 Forums/Threads feature with image included
+- ✔️ forum comments + upvotes feature (yet) **this is V1**.
 
-A new Flutter project.
-
-## Getting Started
-
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
-# connectify
-"# connectify-fix-updated" 
+### Please make sure to leave a star! :D (used appwrite this time)
+### Thanks
+- Armaan
